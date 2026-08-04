@@ -1,17 +1,12 @@
 import bcrypt from "bcryptjs";
 import createError from "http-errors";
-import jwt from "jsonwebtoken";
-import {
-  queryBumpTokenVersionAndGetSelfData,
-  queryBumpTokenVersionAndGetSelfDataCAS,
-  queryGetUserMetadata,
-  queryUpdateExpoPushTokenToNull,
-} from "./auth.repositories.js";
-import { decodeRefreshToken, signJWT } from "./auth.utils.js";
-import { LoginResponse } from "./types/auth.response.types.js";
-import { JWTPayload } from "./types/auth.types.js";
 
-export const loginUser = async (
+import { queryGetUserMetadata } from "./auth.repositories.ts";
+import { decodeJWT, signJWT } from "./auth.utils.ts";
+import { LoginResponse } from "./types/auth.response.types.ts";
+import { JWTPayload } from "./types/auth.types.ts";
+
+export const authenticateUser = async (
   identifier: string,
   password: string,
 ): Promise<LoginResponse> => {
@@ -37,41 +32,24 @@ export const loginUser = async (
   };
 };
 
-export const logoutUserData = async (
+/*export const logoutUserData = async (
   refreshToken: string | null | undefined,
 ): Promise<void> => {
-  const decodedRefresh = decodeRefreshToken(
-    refreshToken ?? null,
-  ) as AccessTokenPayload | null;
+  const decodedRefresh = decodeJWT(refreshToken ?? null);
 
   if (decodedRefresh) {
     await queryBumpTokenVersionAndGetSelfData(decodedRefresh.id);
   }
 };
 
-export const refreshAccessTokenData = async (
+export const refreshSession = async (
   refreshToken: string | null | undefined,
   dpopJkt: string | null | undefined,
 ): Promise<RefreshTokenResponse> => {
-  if (appConfig.dpopEnabled) {
-    if (!dpopJkt) {
-      throw createError(500, "Internal error: DPoP JKT not found on request.");
-    }
-  }
-
   if (!refreshToken) throw createError(401, "No refresh token provided");
 
-  const decoded = decodeRefreshToken(
-    refreshToken ?? null,
-  ) as AccessTokenPayload | null;
+  const decoded = decodeJWT(refreshToken);
   if (!decoded) throw createError(401, "Invalid or expired refresh token");
-
-  if (appConfig.dpopEnabled) {
-    const tokenJkt = decoded.cnf?.jkt;
-    if (tokenJkt && tokenJkt !== dpopJkt) {
-      throw createError(401, "Proof-of-Possession failed (JKT mismatch).");
-    }
-  }
 
   const [user = null] = await queryBumpTokenVersionAndGetSelfDataCAS(
     decoded.id,
@@ -81,43 +59,13 @@ export const refreshAccessTokenData = async (
 
   const { token_version, user_data: userData } = user;
 
-  const cnfClaim = dpopJkt
-    ? {
-        cnf: {
-          jkt: dpopJkt
-            .replace(/\+/g, "-")
-            .replace(/\//g, "_")
-            .replace(/=+$/g, ""),
-        },
-      }
-    : {};
-
-  const newAccess = jwt.sign(
-    {
-      id: userData.id,
-      role: userData.role,
-      tokenVer: token_version,
-      ...cnfClaim,
-    },
-    authConfig.jwtAccessSecret,
-    { expiresIn: "5m" },
-  );
-
-  const newRefresh = jwt.sign(
-    {
-      id: userData.id,
-      role: userData.role,
-      tokenVer: token_version,
-      ...cnfClaim,
-    },
-    authConfig.jwtRefreshSecret,
-    { expiresIn: "14d" },
-  );
+  const newAccessToken = signJWT(userClaims, "5m");
+  const newRefreshToken = signJWT(userClaims, "15d");
 
   return {
     message: "Access token refreshed",
-    accessToken: newAccess,
-    refreshToken: newRefresh,
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
     userId: userData.id,
   };
-};
+};*/

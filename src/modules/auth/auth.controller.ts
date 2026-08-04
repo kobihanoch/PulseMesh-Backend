@@ -1,15 +1,7 @@
 import { Request, Response } from "express";
-import { createLogger } from "../../../infrastructure/logger.ts";
-import {
-  loginUserData,
-  logoutUserData,
-  refreshAccessTokenData,
-} from "./session/session.service.js";
-import { getRefreshToken } from "./session/session.utils.js";
-import { LoginRequest } from "./types/auth.request.types.js";
-import { LoginResponse } from "./types/auth.response.types.js";
-
-const logger = createLogger("controller:auth");
+import { authenticateUser } from "./auth.service.ts";
+import { LoginRequest } from "./types/auth.request.types.ts";
+import { LoginResponse } from "./types/auth.response.types.ts";
 
 /**
  * Authenticate a user with credentials and issue fresh access tokens.
@@ -26,7 +18,7 @@ export const loginUser = async (
   res: Response<LoginResponse>,
 ): Promise<Response<LoginResponse>> => {
   const { identifier, password } = req.body;
-  const payload = await loginUserData(identifier, password);
+  const payload = await authenticateUser(identifier, password);
 
   res.set("Cache-Control", "no-store");
   return res.status(200).json(payload);
@@ -41,14 +33,14 @@ export const loginUser = async (
  * Route: POST /api/auth/logout
  * Access: User
  */
-export const logoutUser = async (
+/*export const logoutUser = async (
   req: Request<{}, LogOutResponse>,
   res: Response<LogOutResponse>,
 ): Promise<Response<LogOutResponse>> => {
   const refreshToken = getRefreshToken(req);
   await logoutUserData(refreshToken);
   return res.status(200).json({ message: "Logged out successfully" });
-};
+};*/
 
 /**
  * Refresh the caller's token pair using a valid refresh token.
@@ -60,7 +52,7 @@ export const logoutUser = async (
  * Route: POST /api/auth/refresh
  * Access: Public
  */
-export const refreshAccessToken = async (
+/*export const refreshAccessToken = async (
   req: Request,
   res: Response<RefreshTokenResponse>,
 ): Promise<Response<RefreshTokenResponse>> => {
@@ -70,4 +62,4 @@ export const refreshAccessToken = async (
 
   res.set("Cache-Control", "no-store");
   return res.status(200).json(payload);
-};
+};*/

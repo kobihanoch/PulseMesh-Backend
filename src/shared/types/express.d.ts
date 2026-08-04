@@ -1,9 +1,9 @@
-import { UserEntity } from "@strong-together/shared";
+import type { JWTPayload } from "../../modules/auth/types/auth.types.ts";
 import type { Logger } from "pino";
 
 export interface AuthenticatedUser {
-  id: UserEntity["id"];
-  role: UserEntity["role"];
+  id: JWTPayload["id"];
+  role: JWTPayload["role"];
 }
 
 declare global {

@@ -1,4 +1,4 @@
-import { loginRequest } from "@strong-together/shared";
+import { loginRequest } from "./types/auth.request.types.ts";
 import { Router } from "express";
 import { withRlsTx } from "../../infrastructure/db.client.ts";
 import { asyncHandler } from "../../shared/middlewares/async-handler.ts";
@@ -14,7 +14,7 @@ import {
   loginUser,
   logoutUser,
   refreshAccessToken,
-} from "./auth.controller.js";
+} from "./auth.controller.ts";
 
 const router = Router();
 
