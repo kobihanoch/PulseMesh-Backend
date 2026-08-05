@@ -58,12 +58,7 @@ export const withRlsTx = <P, Res, Req, Q>(handler: RequestHandler<P, Res, Req, Q
     }
     // If authed
     return await _sql.begin(async (tx) => {
-      const claims = JSON.stringify({
-        sub: userId,
-        role: 'authenticated',
-        aud: 'authenticated',
-      });
-      await tx`select set_config('request.jwt.claims', ${claims}, true)`;
+      await tx`select set_config('app.user_id', ${userId}, true)`;
       await tx`SET LOCAL ROLE authenticated`;
 
       return als.run({ tx }, async () => {
