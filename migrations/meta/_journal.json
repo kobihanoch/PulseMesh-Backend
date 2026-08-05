@@ -8,6 +8,13 @@
       "when": 1785954079922,
       "tag": "0000_amusing_network",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785957886295,
+      "tag": "0001_add_user_rls",
+      "breakpoints": true
     }
   ]
 }

@@ -51,15 +51,14 @@ export const beginTransaction = async <T>(operation: () => Promise<T>): Promise<
 // Wrap a protected route with a single tx + injected claims (RLS)
 export const withRlsTx = <P, Res, Req, Q>(handler: RequestHandler<P, Res, Req, Q>): RequestHandler<P, Res, Req, Q> => {
   return async (req, res, next) => {
-    // If not authed
     const userId = req.user?.id;
-    if (!userId) {
-      return handler(req, res, next);
-    }
-    // If authed
     return await _sql.begin(async (tx) => {
-      await tx`select set_config('app.user_id', ${userId}, true)`;
-      await tx`SET LOCAL ROLE authenticated`;
+      if (userId) {
+        await tx`select set_config('app.user_id', ${userId}, true)`;
+        await tx`SET LOCAL ROLE app_authenticated`;
+      } else {
+        await tx`SET LOCAL ROLE app_guest`;
+      }
 
       return als.run({ tx }, async () => {
         return handler(req, res, next);

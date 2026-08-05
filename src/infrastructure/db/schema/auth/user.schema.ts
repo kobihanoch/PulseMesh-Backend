@@ -1,8 +1,9 @@
 import { sql as drizzleSql } from 'drizzle-orm';
 import { integer, pgPolicy, pgRole, pgSchema, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
-export const authSchema = pgSchema('auth');
-export const authenticatedRole = pgRole('authenticated');
+export const authSchema = pgSchema('app_auth');
+export const authenticatedRole = pgRole('app_authenticated');
+export const guestRole = pgRole('app_guest');
 
 export const user = authSchema
   .table(
