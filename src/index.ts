@@ -1,7 +1,7 @@
-import { createApp } from "./app.ts";
-import { appConfig } from "./config/app.config.ts";
-import { connectDB } from "./infrastructure/db.client.ts";
-import { createIOServer } from "./infrastructure/socket.io.ts";
+import http from 'node:http';
+import { createApp } from './app.ts';
+import { appConfig } from './config/app.config.ts';
+import { connectDB } from './infrastructure/db.client.ts';
 
 const app = createApp();
 
@@ -10,10 +10,10 @@ const PORT = appConfig.port;
 
 await connectDB(); // Connect to PostgreSQL
 
-// SOCKET CONNECTIONS ---------------------------------------------------------------------------------------------
-const { server } = await createIOServer(app);
+// CREATE HTTP SERVER ---------------------------------------------------------------------------------------------
+const server = http.createServer(app);
 
 // LISTEN TO PORT ------------------------------------------------------------------------------------------------
 server.listen(PORT, () => {
-  console.log("Server is running");
+  console.log(`Server is running on port ${PORT}`);
 });

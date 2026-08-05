@@ -1,29 +1,26 @@
-import bcrypt from "bcryptjs";
-import createError from "http-errors";
+import bcrypt from 'bcryptjs';
+import createError from 'http-errors';
 
-import { queryGetUserMetadata } from "./auth.repositories.ts";
-import { decodeJWT, signJWT } from "./auth.utils.ts";
-import { LoginResponse } from "./types/auth.response.types.ts";
-import { JWTPayload } from "./types/auth.types.ts";
+import { queryGetUserMetadata } from './auth.repositories.ts';
+import { signJWT } from './auth.utils.ts';
+import { LoginResponse } from './types/auth.response.types.ts';
+import { JWTCustomPayload } from './types/auth.types.ts';
 
-export const authenticateUser = async (
-  identifier: string,
-  password: string,
-): Promise<LoginResponse> => {
-  const [user = null] = await queryGetUserMetadata(identifier);
-  if (!user) throw createError(401, "Invalid credentials");
+export const authenticateUser = async (identifier: string, password: string): Promise<LoginResponse> => {
+  const user = await queryGetUserMetadata(identifier);
+  if (!user) throw createError(401, 'Invalid credentials');
 
   const isMatch = await bcrypt.compare(password, user.password!);
-  if (!isMatch) throw createError(401, "Invalid credentials");
+  if (!isMatch) throw createError(401, 'Invalid credentials');
 
-  const userClaims: JWTPayload = {
+  const userClaims: JWTCustomPayload = {
     id: user.id,
     role: user.role,
     tokenVer: user.tokenVersion,
   };
 
-  const accessToken = signJWT(userClaims, "5m");
-  const refreshToken = signJWT(userClaims, "15d");
+  const accessToken = signJWT(userClaims, '5m');
+  const refreshToken = signJWT(userClaims, '15d');
 
   return {
     accessJWT: accessToken,

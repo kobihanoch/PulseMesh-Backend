@@ -1,11 +1,10 @@
-import cors from "cors";
-import express from "express";
-import helmet from "helmet";
-import { setupSentryErrorHandler } from "./infrastructure/sentry.ts";
-import userRoutes from "./modules/auth/auth.routes.ts";
-import { checkAppVersion } from "./shared/middlewares/check-app-version.ts";
-import { errorHandler } from "./shared/middlewares/error-handler.ts";
-import { generalLimiter } from "./shared/middlewares/rate-limiter.ts";
+import cors from 'cors';
+import express from 'express';
+import helmet from 'helmet';
+import userRoutes from './modules/auth/auth.routes.ts';
+import { checkAppVersion } from './shared/middlewares/check-app-version.ts';
+import { errorHandler } from './shared/middlewares/error-handler.ts';
+import { generalLimiter } from './shared/middlewares/rate-limiter.ts';
 
 export const createApp = () => {
   const app = express();
@@ -14,28 +13,27 @@ export const createApp = () => {
 
   app.use(
     cors({
-      origin: "*",
-      methods: ["POST", "PUT", "OPTIONS"],
-      allowedHeaders: ["Content-Type"],
+      origin: '*',
+      methods: ['POST', 'PUT', 'OPTIONS'],
+      allowedHeaders: ['Content-Type'],
       credentials: false,
     }),
   );
 
   app.use(helmet());
-  app.set("trust proxy", 1);
+  app.set('trust proxy', 1);
   app.use(generalLimiter);
 
-  app.get("/", (req, res) => {
-    res.send("Server is running...");
+  app.get('/', (req, res) => {
+    res.send('Server is running...');
   });
 
-  app.get("/health", (req, res) => res.status(200).json({ status: "ok" }));
+  app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
   app.use(checkAppVersion);
 
-  app.use("/auth", userRoutes);
+  app.use('/auth', userRoutes);
 
-  setupSentryErrorHandler(app);
   app.use(errorHandler);
 
   return app;

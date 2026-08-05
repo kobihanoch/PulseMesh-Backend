@@ -1,18 +1,18 @@
-import dns from "dns";
-import { RequestHandler } from "express";
-import { AsyncLocalStorage } from "node:async_hooks";
-import postgres from "postgres";
-import { databaseConfig } from "../config/database.config.ts";
-import { appConfig } from "../config/app.config.ts";
+import dns from 'dns';
+import { RequestHandler } from 'express';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import postgres from 'postgres';
+import { databaseConfig } from '../config/database.config.ts';
+import { appConfig } from '../config/app.config.ts';
 
-dns.setDefaultResultOrder("ipv4first");
+dns.setDefaultResultOrder('ipv4first');
 
 const connectionString = databaseConfig.url;
 
 // Base pool client (PgBouncer safe)
 function makeClient(): postgres.Sql {
   return postgres(connectionString!, {
-    ssl: appConfig.isTest ? false : "require",
+    ssl: appConfig.isTest ? false : 'require',
     prepare: false,
     connect_timeout: 30,
   });
@@ -29,7 +29,7 @@ const als = new AsyncLocalStorage<{
 
 // Cיheck if TransientConnError
 function isTransientConnError(err: any): boolean {
-  const msg = String(err?.message || "");
+  const msg = String(err?.message || '');
   return /CONNECTION_ENDED|ECONNRESET|terminat(ed|ion)/i.test(msg);
 }
 
@@ -54,18 +54,14 @@ const sql = (async (strings: TemplateStringsArray, ...values: any[]) => {
 }) as postgres.Sql;
 
 // Nested transactions
-(sql as any).begin = async (
-  fn: (tx: postgres.TransactionSql) => Promise<any>,
-) => {
+(sql as any).begin = async (fn: (tx: postgres.TransactionSql) => Promise<any>) => {
   const store = als.getStore();
   const runner = store?.tx || _sql;
   return runner.begin(fn);
 };
 
 // Wrap a protected route with a single tx + injected claims (RLS)
-export const withRlsTx = <P, Res, Req, Q>(
-  handler: RequestHandler<P, Res, Req, Q>,
-): RequestHandler<P, Res, Req, Q> => {
+export const withRlsTx = <P, Res, Req, Q>(handler: RequestHandler<P, Res, Req, Q>): RequestHandler<P, Res, Req, Q> => {
   return async (req, res, next) => {
     // If not authed
     const userId = req.user?.id;
@@ -76,8 +72,8 @@ export const withRlsTx = <P, Res, Req, Q>(
     return await _sql.begin(async (tx) => {
       const claims = JSON.stringify({
         sub: userId,
-        role: "authenticated",
-        aud: "authenticated",
+        role: 'authenticated',
+        aud: 'authenticated',
       });
       await tx`select set_config('request.jwt.claims', ${claims}, true)`;
       await tx`SET LOCAL ROLE authenticated`;
@@ -92,9 +88,9 @@ export const withRlsTx = <P, Res, Req, Q>(
 export const connectDB = async (): Promise<void> => {
   try {
     await sql<{ connected: number }[]>`select 1 as connected`;
-    console.log("PostgreSQL DB connected.");
+    console.log('Connected to Postgres');
   } catch (err: any) {
-    console.log("PostgreSQL DB connection has failed. ", err);
+    console.error('Connection to Postgres failed', err);
   }
 };
 
