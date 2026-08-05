@@ -40,18 +40,6 @@ export async function queryBumpTokenVersionCAS(token: JWTCustomPayload) {
   return refreshedUser;
 }
 
-/*export async function queryBumpTokenVersionAndGetSelfDataCAS(
-  userId: string,
-  prevTokenVer: number,
-): Promise<UserAfterBump[]> {
-  return sql<UserAfterBump[]>`
-    UPDATE users 
-    SET token_version = token_version + 1 
-    WHERE id = ${userId}::uuid AND token_version = ${prevTokenVer} 
-    RETURNING token_version, (to_jsonb(users) - 'password' - 'token_version') AS user_data
-  `;
-}*/
-
 export async function queryGetUserAuthorizationDetails(userId: string) {
   const [user] = await sql<[UserAuthorizationDetails]>`
     SELECT token_version as "tokenVersion", id, role FROM auth.user WHERE id=${userId}::uuid
