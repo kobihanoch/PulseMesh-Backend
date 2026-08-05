@@ -7,5 +7,4 @@ export interface JWTCustomPayload {
 }
 
 export type UserMetaData = User;
-export type UserAuthorizationDetails = Pick<User, 'id' | 'role'>;
-export type UserTokenVersion = Pick<User, 'tokenVersion'>;
+export type UserAuthorizationDetails = Pick<User, 'id' | 'role' | 'tokenVersion'>;

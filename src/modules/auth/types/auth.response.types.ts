@@ -1,16 +1,10 @@
+import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
+import { user } from '../../../infrastructure/db/schema/user.schema.ts';
 
-export const loginResponse = z.object({
-  accessJWT: z.string(),
-  refreshJWT: z.string(),
-  userMetadata: z.object({
-    username: z.string(),
-    firstName: z.string(),
-    lastName: z.string(),
-    id: z.string(),
-    email: z.email(),
-    tokenVersion: z.number(),
-  }),
+export const loginResponse = createSelectSchema(user).omit({
+  tokenVersion: true,
+  passwordHash: true,
 });
 
 export type LoginResponse = z.infer<typeof loginResponse>;
