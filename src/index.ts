@@ -1,7 +1,7 @@
 import http from 'node:http';
 import { createApp } from './app.ts';
 import { appConfig } from './config/app.config.ts';
-import { connectDB } from './infrastructure/db.client.ts';
+import { connectDB } from './infrastructure/db/db.client.ts';
 
 const app = createApp();
 

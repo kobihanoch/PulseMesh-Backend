@@ -1,8 +1,9 @@
-import sql from '../../infrastructure/db.client.ts';
+import sql from '../../infrastructure/db/db.client.ts';
+import { UserAuthorizationDetails, UserMetaData, UserTokenVersion } from './types/auth.types.ts';
 
 // With bump
 export async function queryGetUserMetadata(identifier: string) {
-  const [user] = await sql`
+  const [user] = await sql<[UserMetaData]>`
     UPDATE auth.users u SET token_version = token_version + 1 
     WHERE u.username = ${identifier}::text OR u.email = ${identifier}::text
     RETURNING 
@@ -11,12 +12,16 @@ export async function queryGetUserMetadata(identifier: string) {
       u.first_name as "firstName", 
       u.last_name as "lastName", 
       u.email,
-      u.token_version as "tokenVersion"`;
+      u.token_version as "tokenVersion",
+      u.created_at as "createdAt",
+      u.updated_at as "updatedAt",
+      u.password_hash as "passwordHash"`;
   return user;
 }
 
 export async function queryGetUserAuthorizationDetails(userId: string) {
-  const [authorizationDetails] = await sql`SELECT id, role FROM auth.user WHERE id=${userId}`;
+  const [authorizationDetails] = await sql<[UserAuthorizationDetails]>`
+    SELECT id, role FROM auth.user WHERE id=${userId}`;
   return authorizationDetails;
 }
 
@@ -33,8 +38,8 @@ export async function queryGetUserAuthorizationDetails(userId: string) {
 }*/
 
 export async function queryGetCurrentTokenVersion(userId: string): Promise<number> {
-  const [{ token_version: tokenVersion }] = await sql`
-    SELECT token_version FROM users WHERE id=${userId}::uuid
+  const [{ tokenVersion }] = await sql<[UserTokenVersion]>`
+    SELECT token_version as "tokenVersion" FROM users WHERE id=${userId}::uuid
   `;
   return tokenVersion;
 }

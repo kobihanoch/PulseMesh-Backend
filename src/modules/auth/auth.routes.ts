@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { withRlsTx } from '../../infrastructure/db.client.ts';
+import { withRlsTx } from '../../infrastructure/db/db.client.ts';
 import { asyncHandler } from '../../shared/middlewares/async-handler.ts';
 import { loginIpLimiter, loginLimiter } from '../../shared/middlewares/rate-limiter.ts';
 import { validate } from '../../shared/middlewares/validate-request.ts';

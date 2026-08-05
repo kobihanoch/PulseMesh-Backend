@@ -6,7 +6,7 @@ import { JWTCustomPayload } from './types/auth.types.ts';
 /*
  * Decode JWT access token
  */
-export const decodeAccessJWT = (token: string | null): JwtPayload | string | null => {
+export const decodeAccessJWT = (token: string | null): JWTCustomPayload | null => {
   if (!token) return null;
   try {
     return jwt.verify(token, authConfig.jwtAccessSecret) as JWTCustomPayload;
@@ -18,7 +18,7 @@ export const decodeAccessJWT = (token: string | null): JwtPayload | string | nul
 /*
  * Decode JWT access token
  */
-export const decodeRefreshJWT = (token: string | null): JwtPayload | string | null => {
+export const decodeRefreshJWT = (token: string | null): JWTCustomPayload | null => {
   if (!token) return null;
   try {
     return jwt.verify(token, authConfig.jwtRefreshSecret) as JWTCustomPayload;

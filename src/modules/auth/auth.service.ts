@@ -10,7 +10,7 @@ export const authenticateUser = async (identifier: string, password: string): Pr
   const user = await queryGetUserMetadata(identifier);
   if (!user) throw createError(401, 'Invalid credentials');
 
-  const isMatch = await bcrypt.compare(password, user.password!);
+  const isMatch = await bcrypt.compare(password, user.passwordHash!);
   if (!isMatch) throw createError(401, 'Invalid credentials');
 
   const userClaims: JWTCustomPayload = {
