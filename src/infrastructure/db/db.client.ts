@@ -12,7 +12,7 @@ const connectionString = databaseConfig.url;
 // Base pool client (PgBouncer safe)
 function makeClient(): postgres.Sql {
   return postgres(connectionString!, {
-    ssl: appConfig.isTest ? false : 'require',
+    ssl: appConfig.isProduction ? 'require' : false,
     prepare: false,
     connect_timeout: 30,
   });
@@ -51,20 +51,14 @@ export const beginTransaction = async <T>(operation: () => Promise<T>): Promise<
 // Wrap a protected route with a single tx + injected claims (RLS)
 export const withRlsTx = <P, Res, Req, Q>(handler: RequestHandler<P, Res, Req, Q>): RequestHandler<P, Res, Req, Q> => {
   return async (req, res, next) => {
-    // If not authed
     const userId = req.user?.id;
-    if (!userId) {
-      return handler(req, res, next);
-    }
-    // If authed
     return await _sql.begin(async (tx) => {
-      const claims = JSON.stringify({
-        sub: userId,
-        role: 'authenticated',
-        aud: 'authenticated',
-      });
-      await tx`select set_config('request.jwt.claims', ${claims}, true)`;
-      await tx`SET LOCAL ROLE authenticated`;
+      if (userId) {
+        await tx`select set_config('app.user_id', ${userId}, true)`;
+        await tx`SET LOCAL ROLE app_authenticated`;
+      } else {
+        await tx`SET LOCAL ROLE app_guest`;
+      }
 
       return als.run({ tx }, async () => {
         return handler(req, res, next);

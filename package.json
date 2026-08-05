@@ -4,7 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch src/index.ts",
+    "orch:dev": "docker compose -f docker-compose.dev.yml up --build -d",
+    "db:push:dev": "docker compose -f docker-compose.dev.yml exec server npm run db:push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:migrate:dev": "docker compose -f docker-compose.dev.yml exec server npm run db:migrate",
     "build": "tsc",
     "start": "node dist/server.js"
   },

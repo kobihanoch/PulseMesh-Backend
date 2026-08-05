@@ -14,7 +14,7 @@ export async function queryGetUserMetadata(identifier: string) {
       u.created_at as "createdAt",
       u.updated_at as "updatedAt",
       u.password_hash as "passwordHash"
-    FROM auth.user u
+    FROM app_auth.user u
     WHERE u.username = ${identifier} OR u.email = ${identifier}`;
 
   return user;
@@ -22,7 +22,7 @@ export async function queryGetUserMetadata(identifier: string) {
 
 export async function queryBumpTokenVersion(userId: string) {
   const [bumpedUser] = await sql<[UserAuthorizationDetails]>`
-    UPDATE auth.user 
+    UPDATE app_auth.user 
     SET token_version = token_version + 1 
     WHERE id = ${userId}::uuid
     RETURNING token_version as "tokenVersion", id, role`;
@@ -32,7 +32,7 @@ export async function queryBumpTokenVersion(userId: string) {
 
 export async function queryBumpTokenVersionCAS(token: JWTCustomPayload) {
   const [refreshedUser] = await sql<[UserAuthorizationDetails?]>`
-    UPDATE auth.user 
+    UPDATE app_auth.user 
     SET token_version = token_version + 1 
     WHERE id = ${token.id}::uuid AND token_version = ${token.tokenVer}
     RETURNING token_version as "tokenVersion", id, role`;

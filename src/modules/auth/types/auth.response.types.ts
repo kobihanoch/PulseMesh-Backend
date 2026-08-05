@@ -1,6 +1,6 @@
 import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { user } from '../../../infrastructure/db/schema/user.schema.ts';
+import { user } from '../../../infrastructure/db/schema/auth/user.schema.ts';
 
 export const loginResponse = createSelectSchema(user).omit({
   tokenVersion: true,
