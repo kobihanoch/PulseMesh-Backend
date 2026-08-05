@@ -1,3 +1,5 @@
+name: pulsemesh-dev
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -6,7 +8,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - '5432:5432'
+      - '5433:5432'
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
@@ -16,6 +18,7 @@ services:
       retries: 10
 
   server:
+    container_name: server
     build:
       context: .
       dockerfile: Dockerfile.dev

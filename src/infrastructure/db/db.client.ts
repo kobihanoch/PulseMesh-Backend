@@ -12,7 +12,7 @@ const connectionString = databaseConfig.url;
 // Base pool client (PgBouncer safe)
 function makeClient(): postgres.Sql {
   return postgres(connectionString!, {
-    ssl: appConfig.isTest ? false : 'require',
+    ssl: appConfig.isProduction ? 'require' : false,
     prepare: false,
     connect_timeout: 30,
   });

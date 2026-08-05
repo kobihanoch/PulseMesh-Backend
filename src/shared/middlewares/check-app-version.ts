@@ -1,14 +1,14 @@
-import { NextFunction, Request, Response } from "express";
-import createError from "http-errors";
-import { appConfig } from "../../config/app.config.ts";
+import { NextFunction, Request, Response } from 'express';
+import createError from 'http-errors';
+import { appConfig } from '../../config/app.config.ts';
 
 // Public endpoints that should bypass the version gate (extend as needed)
-const EXEMPT_PREFIXES = ["/health"];
+const EXEMPT_PREFIXES = ['/health'];
 
 // Parse "v4.2.1", "4.2", or "4" into [major, minor, patch] (numbers)
 function toParts(v: string): [number, number, number] {
-  const parts = String(v || "")
-    .replace(/^v/i, "")
+  const parts = String(v || '')
+    .replace(/^v/i, '')
     .split(/[^\d]+/)
     .filter(Boolean)
     .map((n) => parseInt(n, 10));
@@ -25,28 +25,24 @@ function compareVersions(a: string, b: string): number {
   return 0;
 }
 
-export const checkAppVersion = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+export const checkAppVersion = (req: Request, res: Response, next: NextFunction) => {
   // Skip exempt paths (prefix-based)
   if (EXEMPT_PREFIXES.some((p) => req.path.startsWith(p))) return next();
 
   // Read current version and minimum allowed
-  const current = req.headers["x-app-version"] as string; // case-insensitive
+  const current = req.headers['x-app-version'] as string; // case-insensitive
   const min = appConfig.minAppVersion;
 
   // If header missing
   if (!current) {
     //res.setHeader('x-min-version', min);
-    return next(createError(426, `Please update the app on AppStore`));
+    return next(createError(426, `Please use supported version`));
   }
 
   // Compare semver-like (major -> minor -> patch)
   if (compareVersions(current, min) < 0) {
-    res.setHeader("x-min-Version", min);
-    return next(createError(426, `Please update the app on AppStore`));
+    res.setHeader('x-min-Version', min);
+    return next(createError(426, `Please use supported version`));
   }
   return next();
 };
