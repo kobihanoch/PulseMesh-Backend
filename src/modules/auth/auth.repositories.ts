@@ -41,7 +41,7 @@ export async function queryBumpTokenVersionCAS(token: JWTCustomPayload) {
     UPDATE auth.user 
     SET token_version = token_version + 1 
     WHERE id = ${token.id}::uuid AND token_version = ${token.tokenVer}
-    RETURNING token_version as "newTokenVersion"`;
+    RETURNING token_version as "tokenVersion"`;
 
   return tokenVersion;
 }
