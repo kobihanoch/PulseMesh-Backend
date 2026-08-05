@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import { authConfig } from '../../config/auth.config.ts';
 import { JWTCustomPayload } from './types/auth.types.ts';
 
@@ -30,7 +30,7 @@ export const decodeRefreshJWT = (token: string | null): JWTCustomPayload | null 
 /*
  * Sign JWT access/refresh token
  */
-export const signJWT = (claims: JWTCustomPayload, exp: StringValue | undefined): string => {
+export const signJWT = (claims: JWTCustomPayload, exp: SignOptions['expiresIn']): string => {
   return jwt.sign(claims, authConfig.jwtAccessSecret, { expiresIn: exp });
 };
 

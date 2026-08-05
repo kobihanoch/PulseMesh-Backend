@@ -23,41 +23,29 @@ let _sql = makeClient();
 
 // Async local storage for inner handler
 const als = new AsyncLocalStorage<{
-  tx: postgres.Sql | postgres.TransactionSql;
+  tx: postgres.TransactionSql;
   userId?: string;
 }>();
-
-// Cיheck if TransientConnError
-function isTransientConnError(err: any): boolean {
-  const msg = String(err?.message || '');
-  return /CONNECTION_ENDED|ECONNRESET|terminat(ed|ion)/i.test(msg);
-}
 
 // Global tagged template: prefers the request-bound tx when present
 const sql = (async (strings: TemplateStringsArray, ...values: any[]) => {
   // Check if exists running transaction
   const store = als.getStore(); //
   const runner = store?.tx || _sql;
-  try {
-    return await runner(strings, ...values);
-  } catch (err) {
-    // If eror is not due connection throw to error handler (any SQL errors or server errors)
-    if (!isTransientConnError(err) || store?.tx) throw err;
-
-    // If eror is due connection try to create a new instance
-    try {
-      await _sql.end({ timeout: 1 });
-    } catch {}
-    _sql = makeClient();
-    return _sql(strings, ...values);
-  }
+  return runner(strings, ...values);
 }) as postgres.Sql;
 
-// Nested transactions
-(sql as any).begin = async (fn: (tx: postgres.TransactionSql) => Promise<any>) => {
+// Begin transaction
+export const beginTransaction = async <T>(operation: () => Promise<T>): Promise<T> => {
   const store = als.getStore();
-  const runner = store?.tx || _sql;
-  return runner.begin(fn);
+
+  if (store) {
+    return operation();
+  }
+
+  const result = await _sql.begin((tx) => als.run({ tx }, operation));
+
+  return result as T;
 };
 
 // Wrap a protected route with a single tx + injected claims (RLS)
@@ -85,6 +73,8 @@ export const withRlsTx = <P, Res, Req, Q>(handler: RequestHandler<P, Res, Req, Q
   };
 };
 
+// -------------- DB CONNECTION ------------------------
+
 export const connectDB = async (): Promise<void> => {
   try {
     await sql<{ connected: number }[]>`select 1 as connected`;
@@ -94,6 +84,4 @@ export const connectDB = async (): Promise<void> => {
   }
 };
 
-export default sql as postgres.Sql & {
-  begin: <T>(fn: (tx: postgres.TransactionSql) => Promise<T>) => Promise<T>;
-};
+export default sql as postgres.Sql;
