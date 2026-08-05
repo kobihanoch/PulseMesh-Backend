@@ -1,9 +1,11 @@
+import createError from 'http-errors';
 import dns from 'dns';
 import { RequestHandler } from 'express';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import postgres from 'postgres';
 import { databaseConfig } from '../../config/database.config.ts';
 import { appConfig } from '../../config/app.config.ts';
+import { queryGetUserAuthorizationDetails } from '../../modules/auth/auth.repositories.ts';
 
 dns.setDefaultResultOrder('ipv4first');
 
@@ -52,6 +54,8 @@ export const beginTransaction = async <T>(operation: () => Promise<T>): Promise<
 export const withRlsTx = <P, Res, Req, Q>(handler: RequestHandler<P, Res, Req, Q>): RequestHandler<P, Res, Req, Q> => {
   return async (req, res, next) => {
     const userId = req.user?.id;
+    const tokenVersion = req.user?.tokenVersion;
+
     return await _sql.begin(async (tx) => {
       if (userId) {
         await tx`select set_config('app.user_id', ${userId}, true)`;
@@ -61,6 +65,12 @@ export const withRlsTx = <P, Res, Req, Q>(handler: RequestHandler<P, Res, Req, Q
       }
 
       return als.run({ tx }, async () => {
+        if (userId) {
+          const user = await queryGetUserAuthorizationDetails(userId);
+          if (!user) return next(createError(404, 'User not found'));
+          if (tokenVersion !== user.tokenVersion) return next(createError(401, 'New login required'));
+        }
+
         return handler(req, res, next);
       });
     });

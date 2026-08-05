@@ -1,0 +1,184 @@
+{
+  "id": "0208b2cf-7463-4e8d-9c1f-02e518a2afcc",
+  "prevId": "3e74c834-2cf4-4467-99f7-1b82affcf8a8",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "app_auth.user": {
+      "name": "user",
+      "schema": "app_auth",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'user'"
+        },
+        "token_version": {
+          "name": "token_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_username_unique": {
+          "name": "user_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        },
+        "user_email_unique": {
+          "name": "user_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {
+        "guest_can_register": {
+          "name": "guest_can_register",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "app_guest"
+          ],
+          "withCheck": "\"app_auth\".\"user\".\"role\" = 'user' AND \"app_auth\".\"user\".\"token_version\" = 0"
+        },
+        "guest_can_login": {
+          "name": "guest_can_login",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "app_guest"
+          ],
+          "using": "\"app_auth\".\"user\".\"id\" = NULLIF(current_setting('app.user_id', true), '')::uuid OR\n                          \"app_auth\".\"user\".\"username\" = NULLIF(current_setting('app.login_identifier', true), '') OR \n                          \"app_auth\".\"user\".\"email\" = NULLIF(current_setting('app.login_identifier', true), '')"
+        },
+        "guest_can_refresh": {
+          "name": "guest_can_refresh",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "app_guest"
+          ],
+          "using": "\"app_auth\".\"user\".\"id\" = NULLIF(current_setting('app.user_id', true), '')::uuid OR\n                          \"app_auth\".\"user\".\"username\" = NULLIF(current_setting('app.login_identifier', true), '') OR\n                          \"app_auth\".\"user\".\"email\" = NULLIF(current_setting('app.login_identifier', true), '')",
+          "withCheck": "\"app_auth\".\"user\".\"id\" = NULLIF(current_setting('app.user_id', true), '')::uuid OR\n                              \"app_auth\".\"user\".\"username\" = NULLIF(current_setting('app.login_identifier', true), '') OR\n                              \"app_auth\".\"user\".\"email\" = NULLIF(current_setting('app.login_identifier', true), '')"
+        },
+        "authenticated_can_select_own_user": {
+          "name": "authenticated_can_select_own_user",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "app_authenticated"
+          ],
+          "using": "\"app_auth\".\"user\".\"id\" = NULLIF(current_setting('app.user_id', true), '')::uuid"
+        },
+        "authenticated_can_update_own_user": {
+          "name": "authenticated_can_update_own_user",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "app_authenticated"
+          ],
+          "using": "\"app_auth\".\"user\".\"id\" = NULLIF(current_setting('app.user_id', true), '')::uuid",
+          "withCheck": "\"app_auth\".\"user\".\"id\" = NULLIF(current_setting('app.user_id', true), '')::uuid"
+        },
+        "authenticated_can_delete_own_user": {
+          "name": "authenticated_can_delete_own_user",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "app_authenticated"
+          ],
+          "using": "\"app_auth\".\"user\".\"id\" =NULLIF(current_setting('app.user_id', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "app_auth": "app_auth"
+  },
+  "sequences": {},
+  "roles": {
+    "app_authenticated": {
+      "name": "app_authenticated",
+      "createDb": false,
+      "createRole": false,
+      "inherit": true
+    },
+    "app_guest": {
+      "name": "app_guest",
+      "createDb": false,
+      "createRole": false,
+      "inherit": true
+    }
+  },
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -1,6 +1,14 @@
 import sql from '../../infrastructure/db/db.client.ts';
 import { JWTCustomPayload, UserAuthorizationDetails, UserMetaData } from './types/auth.types.ts';
 
+export async function queryInjectIdentifier(identifier: string) {
+  await sql`SELECT set_config('app.login_identifier', ${identifier}, true)`;
+}
+
+export async function queryInjectUserID(userId: string) {
+  await sql`SELECT set_config('app.user_id', ${userId}, true)`;
+}
+
 export async function queryGetUserMetadata(identifier: string) {
   const [user] = await sql<[UserMetaData?]>`
     SELECT
@@ -42,7 +50,7 @@ export async function queryBumpTokenVersionCAS(token: JWTCustomPayload) {
 
 export async function queryGetUserAuthorizationDetails(userId: string) {
   const [user] = await sql<[UserAuthorizationDetails]>`
-    SELECT token_version as "tokenVersion", id, role FROM auth.user WHERE id=${userId}::uuid
+    SELECT token_version as "tokenVersion", id, role FROM app_auth.user WHERE id=${userId}::uuid
   `;
   return user;
 }

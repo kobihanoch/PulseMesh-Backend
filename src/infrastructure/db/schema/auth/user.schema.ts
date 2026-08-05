@@ -22,11 +22,54 @@ export const user = authSchema
     },
     // Policies
     (table) => [
-      pgPolicy('user_access_own_row', {
-        for: 'all',
+      // Guest: registration
+      pgPolicy('guest_can_register', {
+        for: 'insert',
+        to: guestRole,
+        withCheck: drizzleSql`${table.role} = 'user' AND ${table.tokenVersion} = 0`,
+      }),
+
+      // Guest: login lookup
+      pgPolicy('guest_can_login', {
+        for: 'select',
+        to: guestRole,
+        using: drizzleSql`${table.id} = NULLIF(current_setting('app.user_id', true), '')::uuid OR
+                          ${table.username} = NULLIF(current_setting('app.login_identifier', true), '') OR 
+                          ${table.email} = NULLIF(current_setting('app.login_identifier', true), '')`,
+      }),
+
+      // Guest: login token bump or refresh
+      pgPolicy('guest_can_refresh', {
+        for: 'update',
+        to: guestRole,
+        using: drizzleSql`${table.id} = NULLIF(current_setting('app.user_id', true), '')::uuid OR
+                          ${table.username} = NULLIF(current_setting('app.login_identifier', true), '') OR
+                          ${table.email} = NULLIF(current_setting('app.login_identifier', true), '')`,
+        withCheck: drizzleSql`${table.id} = NULLIF(current_setting('app.user_id', true), '')::uuid OR
+                              ${table.username} = NULLIF(current_setting('app.login_identifier', true), '') OR
+                              ${table.email} = NULLIF(current_setting('app.login_identifier', true), '')`,
+      }),
+
+      // Authenticated: read own row
+      pgPolicy('authenticated_can_select_own_user', {
+        for: 'select',
+        to: authenticatedRole,
+        using: drizzleSql`${table.id} = NULLIF(current_setting('app.user_id', true), '')::uuid`,
+      }),
+
+      // Authenticated: update own row
+      pgPolicy('authenticated_can_update_own_user', {
+        for: 'update',
         to: authenticatedRole,
         using: drizzleSql`${table.id} = NULLIF(current_setting('app.user_id', true), '')::uuid`,
         withCheck: drizzleSql`${table.id} = NULLIF(current_setting('app.user_id', true), '')::uuid`,
+      }),
+
+      // Authenticated: delete own row
+      pgPolicy('authenticated_can_delete_own_user', {
+        for: 'delete',
+        to: authenticatedRole,
+        using: drizzleSql`${table.id} =NULLIF(current_setting('app.user_id', true), '')::uuid`,
       }),
     ],
   )

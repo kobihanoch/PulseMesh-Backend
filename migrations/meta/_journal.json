@@ -12,8 +12,15 @@
     {
       "idx": 1,
       "version": "7",
-      "when": 1785957886295,
-      "tag": "0001_add_user_rls",
+      "when": 1785968940751,
+      "tag": "0001_setup_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785970994573,
+      "tag": "0002_add_user_rls",
       "breakpoints": true
     }
   ]

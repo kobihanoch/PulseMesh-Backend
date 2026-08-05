@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import createError from 'http-errors';
-import { queryGetUserAuthorizationDetails } from '../../modules/auth/auth.repositories.ts';
 import { decodeAccessJWT, getAccessToken } from '../../modules/auth/auth.utils.ts';
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -17,14 +16,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     return next(createError(401, 'Access token is not valid'));
   }
 
-  const user = await queryGetUserAuthorizationDetails(decoded.id);
-  if (!user) return next(createError(404, 'User not found'));
-
-  if (decoded.tokenVer !== user.tokenVersion) {
-    return next(createError(401, 'New login required'));
-  }
-
   // Inject to request
-  req.user = user;
+  // JWT has already been cryptographically verified
+  req.user = {
+    id: decoded.id,
+    role: decoded.role,
+    tokenVersion: decoded.tokenVer,
+  };
   next();
 };

@@ -1,5 +1,5 @@
 {
-  "id": "109daaa4-29dc-4abd-b9ef-ac163c93215f",
+  "id": "3e74c834-2cf4-4467-99f7-1b82affcf8a8",
   "prevId": "6e730ef1-c565-4a9f-8503-343065dfba04",
   "version": "7",
   "dialect": "postgresql",
@@ -80,56 +80,28 @@
       "uniqueConstraints": {
         "user_username_unique": {
           "name": "user_username_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"],
+          "nullsNotDistinct": false
         },
         "user_email_unique": {
           "name": "user_email_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"],
+          "nullsNotDistinct": false
         }
       },
-      "policies": {
-        "user_access_own_row": {
-          "name": "user_access_own_row",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": [
-            "app_authenticated"
-          ],
-          "using": "\"app_auth\".\"user\".\"id\" = NULLIF(current_setting('app.user_id', true), '')::uuid",
-          "withCheck": "\"app_auth\".\"user\".\"id\" = NULLIF(current_setting('app.user_id', true), '')::uuid"
-        }
-      },
+      "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": true
+      "isRLSEnabled": false
     }
   },
   "enums": {},
   "schemas": {
     "app_auth": "app_auth"
   },
-  "sequences": {},
-  "roles": {
-    "app_authenticated": {
-      "name": "app_authenticated",
-      "createDb": false,
-      "createRole": false,
-      "inherit": true
-    },
-    "app_guest": {
-      "name": "app_guest",
-      "createDb": false,
-      "createRole": false,
-      "inherit": true
-    }
-  },
-  "policies": {},
   "views": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
   "_meta": {
     "columns": {},
     "schemas": {},

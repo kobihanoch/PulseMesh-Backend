@@ -1,9 +1,9 @@
-import type { JWTPayload } from "../../modules/auth/types/auth.types.ts";
-import type { Logger } from "pino";
+import type { JWTCustomPayload } from '../../modules/auth/types/auth.types.ts';
 
 export interface AuthenticatedUser {
-  id: JWTPayload["id"];
-  role: JWTPayload["role"];
+  id: JWTCustomPayload['id'];
+  role: JWTCustomPayload['role'];
+  tokenVersion: JWTCustomPayload['tokenVer'];
 }
 
 declare global {
