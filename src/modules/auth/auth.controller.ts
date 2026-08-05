@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
-import { authenticateUser, logoutFromAllDevices } from './auth.service.ts';
+import { JwtPayload } from 'jsonwebtoken';
+import { authenticateUser, logoutFromAllDevices, refreshSession } from './auth.service.ts';
+import { decodeAccessJWT, decodeRefreshJWT, getAccessToken, getRefreshToken } from './auth.utils.ts';
 import { LoginRequest } from './types/auth.request.types.ts';
 import { LoginResponse } from './types/auth.response.types.ts';
-import { getRefreshToken } from './auth.utils.ts';
 
 /**
  * Authenticate a user with credentials and issue fresh access and refresh tokens.
@@ -14,10 +15,9 @@ import { getRefreshToken } from './auth.utils.ts';
  */
 export const loginUser = async (req: Request<{}, LoginResponse, LoginRequest>, res: Response<LoginResponse>): Promise<Response<LoginResponse>> => {
   const { identifier, password } = req.body;
-  const payload = await authenticateUser(identifier, password);
-
-  res.set('Cache-Control', 'no-store');
-  return res.status(200).json(payload);
+  const { accessToken, refreshToken, userMetadata } = await authenticateUser(identifier, password);
+  storeTokensInHTTPOnlyCookie(res, refreshToken, accessToken);
+  return res.status(200).json(userMetadata);
 };
 
 /**
@@ -32,27 +32,63 @@ export const loginUser = async (req: Request<{}, LoginResponse, LoginRequest>, r
 export const logoutUser = async (req: Request, res: Response): Promise<Response> => {
   const refreshToken = getRefreshToken(req);
   await logoutFromAllDevices(refreshToken);
+
+  clearTokensInHTTPOnlyCookie(res);
+
   return res.status(204).send();
 };
 
 /**
  * Refresh the caller's token pair using a valid refresh token.
  *
- * Validates the refresh token, enforces DPoP proof binding when enabled,
+ * Validates the refresh token.
  * rotates token version state, and returns a fresh access and refresh token
  * pair.
  *
  * Route: POST /api/auth/refresh
  * Access: Public
  */
-/*export const refreshAccessToken = async (
-  req: Request,
-  res: Response<RefreshTokenResponse>,
-): Promise<Response<RefreshTokenResponse>> => {
-  const dpopJkt = req.dpopJkt;
-  const refreshToken = getRefreshToken(req);
-  const payload = await refreshAccessTokenData(refreshToken, dpopJkt);
+export const refreshAccessToken = async (req: Request, res: Response): Promise<Response> => {
+  const staleRefreshToken = getRefreshToken(req);
+  const { refreshToken, accessToken } = await refreshSession(staleRefreshToken);
+  storeTokensInHTTPOnlyCookie(res, refreshToken, accessToken);
+  return res.status(204).end();
+};
 
-  res.set("Cache-Control", "no-store");
-  return res.status(200).json(payload);
-};*/
+// Helpers
+function storeTokensInHTTPOnlyCookie(res: Response, refreshToken: string, accessToken: string) {
+  const { exp: refreshExp } = decodeRefreshJWT(refreshToken) as JwtPayload;
+  const { exp: accessExp } = decodeAccessJWT(accessToken) as JwtPayload;
+
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: refreshExp! * 1000 - Date.now(),
+    path: '/auth/',
+  });
+
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: accessExp! * 1000 - Date.now(),
+    path: '/',
+  });
+}
+
+function clearTokensInHTTPOnlyCookie(res: Response) {
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/auth/',
+  });
+
+  res.clearCookie('accessToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+  });
+}

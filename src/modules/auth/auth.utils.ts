@@ -1,7 +1,23 @@
 import { Request } from 'express';
-import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { authConfig } from '../../config/auth.config.ts';
-import { JWTCustomPayload } from './types/auth.types.ts';
+import { JWTCustomPayload, UserAuthorizationDetails } from './types/auth.types.ts';
+
+/*
+ * SIgn JWT tokens pair
+ */
+export const signTokens = (user: UserAuthorizationDetails, accessExp: SignOptions['expiresIn'], refreshExp: SignOptions['expiresIn']) => {
+  const userClaims: JWTCustomPayload = {
+    id: user.id,
+    role: user.role,
+    tokenVer: user.tokenVersion,
+  };
+
+  const accessToken = signAccessJWT(userClaims, accessExp);
+  const refreshToken = signRefreshJWT(userClaims, refreshExp);
+
+  return { refreshToken, accessToken };
+};
 
 /*
  * Decode JWT access token
@@ -30,14 +46,14 @@ export const decodeRefreshJWT = (token: string | null): JWTCustomPayload | null 
 /*
  * Sign JWT access token
  */
-export const signAccessJWT = (claims: JWTCustomPayload, exp: SignOptions['expiresIn']): string => {
+const signAccessJWT = (claims: JWTCustomPayload, exp: SignOptions['expiresIn']): string => {
   return jwt.sign(claims, authConfig.jwtAccessSecret, { expiresIn: exp });
 };
 
 /*
  * Sign JWT access token
  */
-export const signRefreshJWT = (claims: JWTCustomPayload, exp: SignOptions['expiresIn']): string => {
+const signRefreshJWT = (claims: JWTCustomPayload, exp: SignOptions['expiresIn']): string => {
   return jwt.sign(claims, authConfig.jwtRefreshSecret, { expiresIn: exp });
 };
 
@@ -45,7 +61,7 @@ export const signRefreshJWT = (claims: JWTCustomPayload, exp: SignOptions['expir
  * Extracts a Bearer token from a header string safely.
  */
 export const extractBearerToken = (rawHeader: string | undefined): string | null => {
-  if (!rawHeader || typeof rawHeader !== 'string') return null;
+  if (!rawHeader) return null;
   return rawHeader.startsWith('Bearer ') ? rawHeader.slice(7).trim() : rawHeader.trim() || null;
 };
 
@@ -53,14 +69,14 @@ export const extractBearerToken = (rawHeader: string | undefined): string | null
  * Extracts the refresh token from the x-refresh-token header.
  */
 export const getRefreshToken = (req: Request): string | null => {
-  const refreshHeader = req.headers['x-refresh-token'] as string | undefined;
-  return extractBearerToken(refreshHeader);
+  const token = req.cookies.refreshToken;
+  return extractBearerToken(token);
 };
 
 /*
  * Extracts the access token from the Authorization header.
  */
 export const getAccessToken = (req: Request): string | null => {
-  const authHeader = req.headers.authorization;
-  return extractBearerToken(authHeader);
+  const token = req.cookies.accessToken;
+  return extractBearerToken(token);
 };
