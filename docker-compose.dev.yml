@@ -10,7 +10,7 @@ services:
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d defib']
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d pulsemesh']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -24,6 +24,8 @@ services:
     environment:
       NODE_ENV: development
       PORT: 5000
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/pulsemesh
+    command: sh -c "npm run db:migrate && npm run dev"
     ports:
       - '5000:5000'
     volumes:
