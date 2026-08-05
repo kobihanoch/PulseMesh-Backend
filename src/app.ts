@@ -14,8 +14,15 @@ export const createApp = () => {
   app.use(
     cors({
       origin: '*',
-      methods: ['POST', 'PUT', 'OPTIONS'],
-      allowedHeaders: ['Content-Type'],
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'x-refresh-token',
+        'x-app-version',
+        'x-client-id',
+      ],
+      exposedHeaders: ['x-min-version'],
       credentials: false,
     }),
   );

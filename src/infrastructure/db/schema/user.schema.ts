@@ -2,7 +2,7 @@ import { integer, pgSchema, text, timestamp, uuid, varchar } from 'drizzle-orm/p
 
 export const authSchema = pgSchema('auth');
 
-export const users = authSchema.table('user', {
+export const user = authSchema.table('user', {
   id: uuid('id').defaultRandom().primaryKey(),
   username: varchar('username', { length: 50 }).notNull().unique(),
   email: varchar('email', { length: 255 }).notNull().unique(),
@@ -15,5 +15,5 @@ export const users = authSchema.table('user', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
+export type User = typeof user.$inferSelect;
+export type NewUser = typeof user.$inferInsert;

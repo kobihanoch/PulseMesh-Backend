@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { withRlsTx } from '../../infrastructure/db/db.client.ts';
 import { asyncHandler } from '../../shared/middlewares/async-handler.ts';
+import { authenticate } from '../../shared/middlewares/authentication.ts';
+import { authorize } from '../../shared/middlewares/authorization.ts';
 import { loginIpLimiter, loginLimiter } from '../../shared/middlewares/rate-limiter.ts';
 import { validate } from '../../shared/middlewares/validate-request.ts';
-import { loginUser } from './auth.controller.ts';
+import { loginUser, logoutUser } from './auth.controller.ts';
 import { loginRequest } from './types/auth.request.types.ts';
 import { loginResponse } from './types/auth.response.types.ts';
 
@@ -23,14 +25,14 @@ router.post(
   dpopValidationMiddleware,
   asyncHandler(withRlsTx(refreshAccessToken)),
 ); // Refresh token
+*/
 
 // User routes
 router.post(
-  "/logout",
-  dpopValidationMiddleware,
+  '/logout',
   authenticate,
-  authorize("user"),
+  authorize('user', 'admin'),
   asyncHandler(withRlsTx(logoutUser)),
-); // Logging out a user*/
+); // Logging out a user
 
 export default router;

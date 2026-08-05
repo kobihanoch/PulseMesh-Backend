@@ -16,7 +16,7 @@ export const decodeAccessJWT = (token: string | null): JWTCustomPayload | null =
 };
 
 /*
- * Decode JWT access token
+ * Decode JWT refresh token
  */
 export const decodeRefreshJWT = (token: string | null): JWTCustomPayload | null => {
   if (!token) return null;
@@ -28,10 +28,17 @@ export const decodeRefreshJWT = (token: string | null): JWTCustomPayload | null 
 };
 
 /*
- * Sign JWT access/refresh token
+ * Sign JWT access token
  */
-export const signJWT = (claims: JWTCustomPayload, exp: SignOptions['expiresIn']): string => {
+export const signAccessJWT = (claims: JWTCustomPayload, exp: SignOptions['expiresIn']): string => {
   return jwt.sign(claims, authConfig.jwtAccessSecret, { expiresIn: exp });
+};
+
+/*
+ * Sign JWT access token
+ */
+export const signRefreshJWT = (claims: JWTCustomPayload, exp: SignOptions['expiresIn']): string => {
+  return jwt.sign(claims, authConfig.jwtRefreshSecret, { expiresIn: exp });
 };
 
 /*

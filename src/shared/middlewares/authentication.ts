@@ -7,7 +7,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   // Get access token
   const accessToken = getAccessToken(req);
   if (!accessToken) {
-    res.status(401).json({ message: 'No access token provided' });
+    next(createError(401, 'No access token provided'));
     return;
   }
 
