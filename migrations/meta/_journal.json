@@ -29,6 +29,13 @@
       "when": 1786006456287,
       "tag": "0003_clean_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786007933419,
+      "tag": "0004_add_devices_and_registrants",
+      "breakpoints": true
     }
   ]
 }
