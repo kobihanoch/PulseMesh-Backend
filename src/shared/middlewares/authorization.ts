@@ -5,7 +5,7 @@ type Role = 'user' | 'admin';
 
 export const authorize =
   (...allowedRoles: Role[]): RequestHandler =>
-  (req, _res, next) => {
+  (req, res, next) => {
     const userRole = req.user?.role?.toLowerCase();
 
     if (!userRole) {
