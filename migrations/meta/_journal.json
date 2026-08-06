@@ -22,6 +22,13 @@
       "when": 1785970994573,
       "tag": "0002_add_user_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786006456287,
+      "tag": "0003_clean_deathstrike",
+      "breakpoints": true
     }
   ]
 }

@@ -11,31 +11,20 @@ export const user = authSchema
     {
       id: uuid('id').defaultRandom().primaryKey(),
       username: varchar('username', { length: 50 }).notNull().unique(),
-      email: varchar('email', { length: 255 }).notNull().unique(),
       passwordHash: text('password_hash').notNull(),
-      firstName: varchar('first_name', { length: 100 }).notNull(),
-      lastName: varchar('last_name', { length: 100 }).notNull(),
-      role: varchar('role', { length: 30 }).notNull().default('user'),
+      role: varchar('role', { length: 30 }).notNull().default('admin'),
       tokenVersion: integer('token_version').notNull().default(0),
       createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
       updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     },
     // Policies
     (table) => [
-      // Guest: registration
-      pgPolicy('guest_can_register', {
-        for: 'insert',
-        to: guestRole,
-        withCheck: drizzleSql`${table.role} = 'user' AND ${table.tokenVersion} = 0`,
-      }),
-
       // Guest: login lookup
       pgPolicy('guest_can_login', {
         for: 'select',
         to: guestRole,
         using: drizzleSql`${table.id} = NULLIF(current_setting('app.user_id', true), '')::uuid OR
-                          ${table.username} = NULLIF(current_setting('app.login_identifier', true), '') OR 
-                          ${table.email} = NULLIF(current_setting('app.login_identifier', true), '')`,
+                          ${table.username} = NULLIF(current_setting('app.login_identifier', true), '')`,
       }),
 
       // Guest: login token bump or refresh
@@ -43,11 +32,9 @@ export const user = authSchema
         for: 'update',
         to: guestRole,
         using: drizzleSql`${table.id} = NULLIF(current_setting('app.user_id', true), '')::uuid OR
-                          ${table.username} = NULLIF(current_setting('app.login_identifier', true), '') OR
-                          ${table.email} = NULLIF(current_setting('app.login_identifier', true), '')`,
+                          ${table.username} = NULLIF(current_setting('app.login_identifier', true), '')`,
         withCheck: drizzleSql`${table.id} = NULLIF(current_setting('app.user_id', true), '')::uuid OR
-                              ${table.username} = NULLIF(current_setting('app.login_identifier', true), '') OR
-                              ${table.email} = NULLIF(current_setting('app.login_identifier', true), '')`,
+                              ${table.username} = NULLIF(current_setting('app.login_identifier', true), '')`,
       }),
 
       // Authenticated: read own row

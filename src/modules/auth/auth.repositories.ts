@@ -14,16 +14,13 @@ export async function queryGetUserMetadata(identifier: string) {
     SELECT
       u.id::uuid, 
       u.username, 
-      u.first_name as "firstName", 
-      u.last_name as "lastName", 
-      u.email,
       u.role,
       u.token_version as "tokenVersion",
       u.created_at as "createdAt",
       u.updated_at as "updatedAt",
       u.password_hash as "passwordHash"
     FROM app_auth.user u
-    WHERE u.username = ${identifier} OR u.email = ${identifier}`;
+    WHERE u.username = ${identifier}`;
 
   return user;
 }
