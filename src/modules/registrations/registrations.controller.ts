@@ -7,10 +7,13 @@ import type {
   UpdateRegistrationRequest,
 } from './types/registrations.request.types.ts';
 import type { RegistrationResponse, RegistrationsListResponse } from './types/registrations.response.types.ts';
-
-const notImplemented = (): never => {
-  throw new Error('Registration controller is not implemented yet');
-};
+import {
+  createPublicRegistration,
+  deleteRegistrationById,
+  getRegistrationById,
+  getRegistrationsPage,
+  updateRegistrationById,
+} from './registrations.service.ts';
 
 /**
  * Register a member of the public and their selected equipment.
@@ -24,7 +27,10 @@ const notImplemented = (): never => {
 export const createRegistration = async (
   req: Request<{}, RegistrationResponse, CreateRegistrationRequest>,
   res: Response<RegistrationResponse>,
-): Promise<Response<RegistrationResponse>> => notImplemented();
+): Promise<Response<RegistrationResponse>> => {
+  const registration = await createPublicRegistration(req.body);
+  return res.status(201).json(registration);
+};
 
 /**
  * Return a paginated and optionally filtered registration list.
@@ -35,7 +41,10 @@ export const createRegistration = async (
 export const listRegistrations = async (
   req: Request<{}, RegistrationsListResponse, {}, ListRegistrationsRequest>,
   res: Response<RegistrationsListResponse>,
-): Promise<Response<RegistrationsListResponse>> => notImplemented();
+): Promise<Response<RegistrationsListResponse>> => {
+  const registrations = await getRegistrationsPage(req.query);
+  return res.status(200).json(registrations);
+};
 
 /**
  * Return one registrant together with their registered equipment.
@@ -46,7 +55,10 @@ export const listRegistrations = async (
 export const getRegistration = async (
   req: Request<GetRegistrationRequest['params'], RegistrationResponse>,
   res: Response<RegistrationResponse>,
-): Promise<Response<RegistrationResponse>> => notImplemented();
+): Promise<Response<RegistrationResponse>> => {
+  const registration = await getRegistrationById(req.params.registrantId);
+  return res.status(200).json(registration);
+};
 
 /**
  * Update the contact or medical-training details of one registrant.
@@ -57,7 +69,10 @@ export const getRegistration = async (
 export const updateRegistration = async (
   req: Request<UpdateRegistrationRequest['params'], RegistrationResponse, UpdateRegistrationRequest['body']>,
   res: Response<RegistrationResponse>,
-): Promise<Response<RegistrationResponse>> => notImplemented();
+): Promise<Response<RegistrationResponse>> => {
+  const registration = await updateRegistrationById(req.params.registrantId, req.body);
+  return res.status(200).json(registration);
+};
 
 /**
  * Delete a registrant and their associated equipment.
@@ -65,4 +80,7 @@ export const updateRegistration = async (
  * Route: DELETE /registrations/:registrantId
  * Access: Admin
  */
-export const deleteRegistration = async (req: Request<DeleteRegistrationRequest['params']>, res: Response): Promise<Response> => notImplemented();
+export const deleteRegistration = async (req: Request<DeleteRegistrationRequest['params']>, res: Response): Promise<Response> => {
+  await deleteRegistrationById(req.params.registrantId);
+  return res.status(204).send();
+};
