@@ -43,6 +43,13 @@
       "when": 1786044973317,
       "tag": "0005_add_incidents",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786108763523,
+      "tag": "0006_incident_policies",
+      "breakpoints": true
     }
   ]
 }

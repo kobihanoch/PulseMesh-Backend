@@ -33,6 +33,11 @@ export const loraDevice = registrySchema
         to: guestRole,
         withCheck: drizzleSql`true`,
       }),
+      pgPolicy('guest_can_read_eligible_lora_devices', {
+        for: 'select',
+        to: guestRole,
+        using: drizzleSql`${table.status} = 'active' AND ${table.latitude} IS NOT NULL AND ${table.longitude} IS NOT NULL`,
+      }),
       pgPolicy('admin_can_manage_lora_devices', {
         for: 'all',
         to: authenticatedRole,

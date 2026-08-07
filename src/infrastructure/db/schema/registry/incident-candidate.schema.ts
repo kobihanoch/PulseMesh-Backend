@@ -1,6 +1,6 @@
 import { sql as drizzleSql } from 'drizzle-orm';
 import { index, integer, pgPolicy, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { authenticatedRole } from '../auth/user.schema.ts';
+import { authenticatedRole, guestRole } from '../auth/user.schema.ts';
 import { incident } from './incident.schema.ts';
 import { loraDevice } from './lora-device.schema.ts';
 import { registrySchema } from './registrant.schema.ts';
@@ -28,6 +28,11 @@ export const incidentCandidate = registrySchema
       uniqueIndex('incident_candidate_incident_device_unique').on(table.incidentId, table.loraDeviceId),
       index('incident_candidate_incident_id_idx').on(table.incidentId),
       index('incident_candidate_lora_device_id_idx').on(table.loraDeviceId),
+      pgPolicy('guest_can_create_incident_candidates', {
+        for: 'insert',
+        to: guestRole,
+        withCheck: drizzleSql`true`,
+      }),
       pgPolicy('admin_can_manage_incident_candidates', {
         for: 'all',
         to: authenticatedRole,

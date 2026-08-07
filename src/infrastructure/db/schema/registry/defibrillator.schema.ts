@@ -18,11 +18,16 @@ export const defibrillator = registrySchema
       createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
       updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     },
-    () => [
+    (table) => [
       pgPolicy('guest_can_create_defibrillator', {
         for: 'insert',
         to: guestRole,
         withCheck: drizzleSql`true`,
+      }),
+      pgPolicy('guest_can_read_working_defibrillators', {
+        for: 'select',
+        to: guestRole,
+        using: drizzleSql`${table.status} = 'working'`,
       }),
       pgPolicy('admin_can_manage_defibrillators', {
         for: 'all',
