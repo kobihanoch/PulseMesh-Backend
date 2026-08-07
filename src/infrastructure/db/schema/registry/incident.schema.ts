@@ -33,6 +33,11 @@ export const incident = registrySchema
         to: guestRole,
         withCheck: drizzleSql`${table.status} = 'active' AND ${table.closedAt} IS NULL`,
       }),
+      pgPolicy('guest_can_read_active_incidents', {
+        for: 'select',
+        to: guestRole,
+        using: drizzleSql`${table.status} = 'active'`,
+      }),
       pgPolicy('admin_can_manage_incidents', {
         for: 'all',
         to: authenticatedRole,

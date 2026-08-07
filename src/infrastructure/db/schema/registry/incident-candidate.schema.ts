@@ -33,6 +33,17 @@ export const incidentCandidate = registrySchema
         to: guestRole,
         withCheck: drizzleSql`true`,
       }),
+      pgPolicy('guest_can_read_incident_candidates', {
+        for: 'select',
+        to: guestRole,
+        using: drizzleSql`${table.status} IN ('notified', 'accepted', 'declined')`,
+      }),
+      pgPolicy('guest_can_respond_to_incident_candidates', {
+        for: 'update',
+        to: guestRole,
+        using: drizzleSql`${table.status} = 'notified'`,
+        withCheck: drizzleSql`${table.status} IN ('accepted', 'declined')`,
+      }),
       pgPolicy('admin_can_manage_incident_candidates', {
         for: 'all',
         to: authenticatedRole,

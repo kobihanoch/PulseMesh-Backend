@@ -6,6 +6,7 @@ import {
   queryEligibleDevices,
   queryGetIncident,
   queryListIncidents,
+  queryRespondToCandidate,
   querySaveCandidates,
 } from './incidents.repositories.ts';
 import type { CreateIncidentRequest, ListIncidentsRequest } from './types/incidents.request.types.ts';
@@ -24,8 +25,8 @@ export async function createNewIncident(input: CreateIncidentRequest) {
     .sort((a, b) => a.distanceMeters - b.distanceMeters)
     .slice(0, MAX_CANDIDATES);
 
-  await querySaveCandidates(incident.id, devices);
-  return { ...incident, candidates: devices };
+  const candidates = await querySaveCandidates(incident.id, devices);
+  return { ...incident, candidates };
 }
 
 export async function getIncidentsPage(query: ListIncidentsRequest) {
@@ -52,4 +53,10 @@ export async function closeIncidentById(incidentId: string, status: 'resolved' |
   const incident = await queryCloseIncident(incidentId, status);
   if (!incident) throw createError(404, 'Active incident not found');
   return incident;
+}
+
+export async function respondToCandidateById(incidentId: string, candidateId: string, status: 'accepted' | 'declined') {
+  const candidate = await queryRespondToCandidate(incidentId, candidateId, status);
+  if (!candidate) throw createError(404, 'Active candidate not found');
+  return candidate;
 }

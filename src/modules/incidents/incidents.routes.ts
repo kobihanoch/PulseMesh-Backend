@@ -5,11 +5,18 @@ import { authenticate } from '../../shared/middlewares/authentication.ts';
 import { authorize } from '../../shared/middlewares/authorization.ts';
 import { validate } from '../../shared/middlewares/validate-request.ts';
 import * as controller from './incidents.controller.ts';
-import { createIncidentRequest, incidentIdRequest, listIncidentsRequest, updateIncidentRequest } from './types/incidents.request.types.ts';
+import {
+  createIncidentRequest,
+  incidentIdRequest,
+  listIncidentsRequest,
+  respondToCandidateRequest,
+  updateIncidentRequest,
+} from './types/incidents.request.types.ts';
 
 const router = Router();
 
 router.post('/', validate(createIncidentRequest), asyncHandler(withRlsTx(controller.createIncident)));
+router.patch('/:incidentId/candidates/:candidateId', validate(respondToCandidateRequest), asyncHandler(withRlsTx(controller.respondToCandidate)));
 
 router.use(authenticate, authorize('admin'));
 router.get('/', validate(listIncidentsRequest), asyncHandler(withRlsTx(controller.listIncidents)) as unknown as RequestHandler);

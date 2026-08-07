@@ -23,7 +23,16 @@ export const updateIncidentRequest = incidentIdRequest.extend({
   body: z.object({ status: z.enum(['resolved', 'cancelled']) }),
 });
 
+export const respondToCandidateRequest = z.object({
+  params: z.object({
+    incidentId: z.string().uuid(),
+    candidateId: z.string().uuid(),
+  }),
+  body: z.object({ status: z.enum(['accepted', 'declined']) }),
+});
+
 export type CreateIncidentRequest = z.infer<typeof createIncidentRequest>['body'];
 export type IncidentIdRequest = z.infer<typeof incidentIdRequest>;
 export type ListIncidentsRequest = z.infer<typeof listIncidentsRequest>['query'];
 export type UpdateIncidentRequest = z.infer<typeof updateIncidentRequest>;
+export type RespondToCandidateRequest = z.infer<typeof respondToCandidateRequest>;

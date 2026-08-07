@@ -1,6 +1,12 @@
 import type { Request, Response } from 'express';
-import { closeIncidentById, createNewIncident, getIncidentById, getIncidentsPage } from './incidents.service.ts';
-import type { CreateIncidentRequest, IncidentIdRequest, ListIncidentsRequest, UpdateIncidentRequest } from './types/incidents.request.types.ts';
+import { closeIncidentById, createNewIncident, getIncidentById, getIncidentsPage, respondToCandidateById } from './incidents.service.ts';
+import type {
+  CreateIncidentRequest,
+  IncidentIdRequest,
+  ListIncidentsRequest,
+  RespondToCandidateRequest,
+  UpdateIncidentRequest,
+} from './types/incidents.request.types.ts';
 
 /**
  * Create an incident and select nearby available devices.
@@ -44,4 +50,15 @@ export async function getIncident(req: Request<IncidentIdRequest['params']>, res
 export async function updateIncident(req: Request<UpdateIncidentRequest['params'], {}, UpdateIncidentRequest['body']>, res: Response) {
   const incident = await closeIncidentById(req.params.incidentId, req.body.status);
   return res.status(200).json(incident);
+}
+
+/**
+ * Accept or decline one incident candidate.
+ *
+ * Route: PATCH /incidents/:incidentId/candidates/:candidateId
+ * Access: Public
+ */
+export async function respondToCandidate(req: Request<RespondToCandidateRequest['params'], {}, RespondToCandidateRequest['body']>, res: Response) {
+  const candidate = await respondToCandidateById(req.params.incidentId, req.params.candidateId, req.body.status);
+  return res.status(200).json(candidate);
 }
