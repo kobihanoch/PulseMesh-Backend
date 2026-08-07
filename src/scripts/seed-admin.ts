@@ -5,8 +5,8 @@ import postgres from 'postgres';
 const nodeEnv = process.argv[2] ?? process.env.NODE_ENV ?? 'development';
 dotenv.config({ path: `.env.${nodeEnv}` });
 
-const databaseUrl = process.env.MIGRATION_DATABASE_URL;
-if (!databaseUrl) throw new Error('MIGRATION_DATABASE_URL is required');
+const databaseUrl = process.env.SEED_DATABASE_URL ?? process.env.MIGRATION_DATABASE_URL;
+if (!databaseUrl) throw new Error('SEED_DATABASE_URL or MIGRATION_DATABASE_URL is required');
 
 const sql = postgres(databaseUrl, { ssl: nodeEnv === 'production' ? 'require' : false });
 const passwordHash = await bcrypt.hash('1234', 10);
