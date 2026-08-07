@@ -5,6 +5,7 @@ import type {
   GetRegistrationRequest,
   ListRegistrationsRequest,
   UpdateRegistrationRequest,
+  UpdateRegistrantLocationRequest,
 } from './types/registrations.request.types.ts';
 import type { RegistrationResponse, RegistrationsListResponse } from './types/registrations.response.types.ts';
 import {
@@ -13,6 +14,7 @@ import {
   getRegistrationById,
   getRegistrationsPage,
   updateRegistrationById,
+  updateRegistrantLocation,
 } from './registrations.service.ts';
 
 /**
@@ -30,6 +32,17 @@ export const createRegistration = async (
 ): Promise<Response<RegistrationResponse>> => {
   const registration = await createPublicRegistration(req.body);
   return res.status(201).json(registration);
+};
+
+/**
+ * Update the current phone location of one registrant.
+ *
+ * Route: PATCH /registrations/:registrantId/location
+ * Access: Public
+ */
+export const updateLocation = async (req: Request<UpdateRegistrantLocationRequest['params'], {}, UpdateRegistrantLocationRequest['body']>, res: Response) => {
+  const registrant = await updateRegistrantLocation(req.params.registrantId, req.body);
+  return res.status(200).json(registrant);
 };
 
 /**

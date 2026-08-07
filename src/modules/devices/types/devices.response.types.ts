@@ -1,7 +1,7 @@
 import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { defibrillator } from '../../../infrastructure/db/schema/registry/defibrillator.schema.ts';
-import { loraDevice } from '../../../infrastructure/db/schema/registry/lora-device.schema.ts';
+import { defibrillator } from '../../../infrastructure/db/postgresql/schema/registry/defibrillator.schema.ts';
+import { loraDevice } from '../../../infrastructure/db/postgresql/schema/registry/lora-device.schema.ts';
 
 export const defibrillatorDeviceResponse = createSelectSchema(defibrillator).extend({
   deviceType: z.literal('defibrillator'),

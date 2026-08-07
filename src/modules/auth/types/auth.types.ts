@@ -1,4 +1,4 @@
-import { User } from '../../../infrastructure/db/schema/auth/user.schema.ts';
+import { User } from '../../../infrastructure/db/postgresql/schema/auth/user.schema.ts';
 
 export interface JWTCustomPayload {
   id: User['id'];

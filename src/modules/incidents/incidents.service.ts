@@ -11,6 +11,7 @@ import {
 } from './incidents.repositories.ts';
 import type { CreateIncidentRequest, ListIncidentsRequest } from './types/incidents.request.types.ts';
 import { distanceInMeters } from './incidents.utils.ts';
+import { simulateIncidentNotifications } from '../notifications/notifications.service.ts';
 
 const MAX_CANDIDATES = 10;
 
@@ -26,6 +27,7 @@ export async function createNewIncident(input: CreateIncidentRequest) {
     .slice(0, MAX_CANDIDATES);
 
   const candidates = await querySaveCandidates(incident.id, devices);
+  await simulateIncidentNotifications(incident.id, candidates);
   return { ...incident, candidates };
 }
 

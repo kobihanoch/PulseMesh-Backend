@@ -57,6 +57,20 @@
       "when": 1786111398442,
       "tag": "0007_candidate_response_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786114623064,
+      "tag": "0008_phone_locations_and_defibrillator_candidates",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786114720077,
+      "tag": "0009_fix_first_phone_location_policy",
+      "breakpoints": true
     }
   ]
 }

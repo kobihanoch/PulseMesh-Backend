@@ -11,8 +11,14 @@ import {
   queryGetRegistrant,
   queryListRegistrants,
   queryUpdateRegistrant,
+  queryUpdateRegistrantLocation,
 } from './registrations.repositories.ts';
-import type { CreateRegistrationRequest, ListRegistrationsRequest, UpdateRegistrationRequest } from './types/registrations.request.types.ts';
+import type {
+  CreateRegistrationRequest,
+  ListRegistrationsRequest,
+  UpdateRegistrantLocationRequest,
+  UpdateRegistrationRequest,
+} from './types/registrations.request.types.ts';
 import type { RegistrationQueryResult } from './types/registrations.types.ts';
 
 export async function createPublicRegistration(input: CreateRegistrationRequest): Promise<RegistrationQueryResult> {
@@ -24,6 +30,9 @@ export async function createPublicRegistration(input: CreateRegistrationRequest)
     lastName: input.lastName ?? null,
     phone: input.phone,
     medicalTraining: input.medicalTraining ?? null,
+    latitude: input.location?.latitude ?? null,
+    longitude: input.location?.longitude ?? null,
+    lastLocationAt: input.location ? now : null,
     createdAt: now,
     updatedAt: now,
   };
@@ -66,6 +75,12 @@ export async function createPublicRegistration(input: CreateRegistrationRequest)
   }
 
   return { ...registrant, defibrillators, loraDevices };
+}
+
+export async function updateRegistrantLocation(registrantId: string, location: UpdateRegistrantLocationRequest['body']) {
+  const registrant = await queryUpdateRegistrantLocation(registrantId, location);
+  if (!registrant) throw createError(404, 'Registration not found');
+  return registrant;
 }
 
 export async function getRegistrationsPage(query: ListRegistrationsRequest) {

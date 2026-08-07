@@ -1,6 +1,6 @@
-import type { Defibrillator } from '../../../infrastructure/db/schema/registry/defibrillator.schema.ts';
-import type { LoraDevice } from '../../../infrastructure/db/schema/registry/lora-device.schema.ts';
-import type { Registrant } from '../../../infrastructure/db/schema/registry/registrant.schema.ts';
+import type { Defibrillator } from '../../../infrastructure/db/postgresql/schema/registry/defibrillator.schema.ts';
+import type { LoraDevice } from '../../../infrastructure/db/postgresql/schema/registry/lora-device.schema.ts';
+import type { Registrant } from '../../../infrastructure/db/postgresql/schema/registry/registrant.schema.ts';
 
 export type RegistrantQueryResult = Registrant;
 export type DefibrillatorQueryResult = Defibrillator;

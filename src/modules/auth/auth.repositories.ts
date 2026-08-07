@@ -1,4 +1,4 @@
-import sql from '../../infrastructure/db/db.client.ts';
+import sql from '../../infrastructure/db/postgresql/postgresql.client.ts';
 import { JWTCustomPayload, UserAuthorizationDetails, UserMetaData } from './types/auth.types.ts';
 
 export async function queryInjectIdentifier(identifier: string) {

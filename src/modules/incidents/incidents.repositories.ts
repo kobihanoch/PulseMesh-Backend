@@ -1,6 +1,6 @@
-import sql from '../../infrastructure/db/db.client.ts';
+import sql from '../../infrastructure/db/postgresql/postgresql.client.ts';
 import { randomUUID } from 'node:crypto';
-import type { Incident } from '../../infrastructure/db/schema/registry/incident.schema.ts';
+import type { Incident } from '../../infrastructure/db/postgresql/schema/registry/incident.schema.ts';
 import type { CreateIncidentRequest } from './types/incidents.request.types.ts';
 import type { IncidentCandidateDetails, IncidentDetails, IncidentStatus, NearbyDevice } from './types/incidents.types.ts';
 
@@ -27,14 +27,24 @@ export async function queryCreateIncident(input: CreateIncidentRequest) {
 
 export async function queryEligibleDevices() {
   return sql<Omit<NearbyDevice, 'distanceMeters'>[]>`
-    SELECT l.id, l.dev_eui AS "devEui", l.latitude, l.longitude,
-      l.battery_percentage AS "batteryPercentage", l.last_transmission_at AS "lastTransmissionAt"
-    FROM registry.lora_device l
-    JOIN registry.defibrillator d ON d.id = l.defibrillator_id
-    WHERE l.status = 'active' AND d.status = 'working'
-      AND l.latitude IS NOT NULL AND l.longitude IS NOT NULL
-      AND l.last_transmission_at >= NOW() - INTERVAL '24 hours'
-      AND (l.battery_percentage IS NULL OR l.battery_percentage >= 20)
+    SELECT d.id AS "defibrillatorId", d.owner_id AS "registrantId",
+      CASE WHEN l.id IS NOT NULL AND l.status = 'active' AND l.last_transmission_at >= NOW() - INTERVAL '24 hours'
+        AND l.latitude IS NOT NULL AND l.longitude IS NOT NULL AND (l.battery_percentage IS NULL OR l.battery_percentage >= 20)
+        THEN l.id END AS "loraDeviceId",
+      CASE WHEN l.status = 'active' THEN l.dev_eui END AS "devEui",
+      l.battery_percentage AS "batteryPercentage",
+      COALESCE(CASE WHEN l.status = 'active' AND l.last_transmission_at >= NOW() - INTERVAL '24 hours' THEN l.latitude END, r.latitude) AS latitude,
+      COALESCE(CASE WHEN l.status = 'active' AND l.last_transmission_at >= NOW() - INTERVAL '24 hours' THEN l.longitude END, r.longitude) AS longitude,
+      COALESCE(CASE WHEN l.status = 'active' AND l.last_transmission_at >= NOW() - INTERVAL '24 hours' THEN l.last_transmission_at END, r.last_location_at) AS "lastTransmissionAt"
+    FROM registry.defibrillator d
+    LEFT JOIN registry.registrant r ON r.id = d.owner_id
+    LEFT JOIN registry.lora_device l ON l.defibrillator_id = d.id
+    WHERE d.status = 'working' AND (
+      (l.status = 'active' AND l.latitude IS NOT NULL AND l.longitude IS NOT NULL
+        AND l.last_transmission_at >= NOW() - INTERVAL '24 hours'
+        AND (l.battery_percentage IS NULL OR l.battery_percentage >= 20))
+      OR (r.latitude IS NOT NULL AND r.longitude IS NOT NULL AND r.last_location_at >= NOW() - INTERVAL '24 hours')
+    )
   `;
 }
 
@@ -44,19 +54,18 @@ export async function querySaveCandidates(incidentId: string, devices: NearbyDev
 
   for (const device of devices) {
     const candidateId = randomUUID();
-    const { id: deviceId, ...deviceDetails } = device;
     await sql`
       INSERT INTO registry.incident_candidate
-        (id, incident_id, lora_device_id, distance_meters, status, notified_at)
-      VALUES (${candidateId}, ${incidentId}, ${deviceId}, ${device.distanceMeters}, 'notified', ${notifiedAt})
+        (id, incident_id, defibrillator_id, lora_device_id, distance_meters, status, notified_at)
+      VALUES (${candidateId}, ${incidentId}, ${device.defibrillatorId}, ${device.loraDeviceId}, ${device.distanceMeters}, 'notified', ${notifiedAt})
     `;
     candidates.push({
-      ...deviceDetails,
+      ...device,
       candidateId,
-      deviceId,
       status: 'notified',
       notifiedAt,
       respondedAt: null,
+      notifications: { push: 'simulated', lora: device.loraDeviceId ? 'simulated' : 'unavailable' },
     });
   }
 
@@ -88,12 +97,17 @@ export async function queryGetIncident(incidentId: string) {
   if (!incident) return undefined;
 
   const candidates = await sql<IncidentCandidateDetails[]>`
-    SELECT c.id AS "candidateId", l.id AS "deviceId", l.dev_eui AS "devEui", l.latitude, l.longitude,
-      l.battery_percentage AS "batteryPercentage", l.last_transmission_at AS "lastTransmissionAt",
+    SELECT c.id AS "candidateId", d.id AS "defibrillatorId", d.owner_id AS "registrantId",
+      l.id AS "loraDeviceId", l.dev_eui AS "devEui",
+      COALESCE(l.latitude, r.latitude) AS latitude, COALESCE(l.longitude, r.longitude) AS longitude,
+      l.battery_percentage AS "batteryPercentage", COALESCE(l.last_transmission_at, r.last_location_at) AS "lastTransmissionAt",
       c.distance_meters AS "distanceMeters", c.status, c.notified_at AS "notifiedAt",
-      c.responded_at AS "respondedAt"
+      c.responded_at AS "respondedAt",
+      json_build_object('push', 'simulated', 'lora', CASE WHEN l.id IS NULL THEN 'unavailable' ELSE 'simulated' END) AS notifications
     FROM registry.incident_candidate c
-    JOIN registry.lora_device l ON l.id = c.lora_device_id
+    JOIN registry.defibrillator d ON d.id = c.defibrillator_id
+    LEFT JOIN registry.registrant r ON r.id = d.owner_id
+    LEFT JOIN registry.lora_device l ON l.id = c.lora_device_id
     WHERE c.incident_id = ${incidentId}
     ORDER BY c.distance_meters
   `;
@@ -115,12 +129,17 @@ export async function queryRespondToCandidate(incidentId: string, candidateId: s
   if (result.count === 0) return undefined;
 
   const [candidate] = await sql<[IncidentCandidateDetails?]>`
-    SELECT c.id AS "candidateId", l.id AS "deviceId", l.dev_eui AS "devEui", l.latitude, l.longitude,
-      l.battery_percentage AS "batteryPercentage", l.last_transmission_at AS "lastTransmissionAt",
+    SELECT c.id AS "candidateId", d.id AS "defibrillatorId", d.owner_id AS "registrantId",
+      l.id AS "loraDeviceId", l.dev_eui AS "devEui",
+      COALESCE(l.latitude, r.latitude) AS latitude, COALESCE(l.longitude, r.longitude) AS longitude,
+      l.battery_percentage AS "batteryPercentage", COALESCE(l.last_transmission_at, r.last_location_at) AS "lastTransmissionAt",
       c.distance_meters AS "distanceMeters", c.status, c.notified_at AS "notifiedAt",
-      c.responded_at AS "respondedAt"
+      c.responded_at AS "respondedAt",
+      json_build_object('push', 'simulated', 'lora', CASE WHEN l.id IS NULL THEN 'unavailable' ELSE 'simulated' END) AS notifications
     FROM registry.incident_candidate c
-    JOIN registry.lora_device l ON l.id = c.lora_device_id
+    JOIN registry.defibrillator d ON d.id = c.defibrillator_id
+    LEFT JOIN registry.registrant r ON r.id = d.owner_id
+    LEFT JOIN registry.lora_device l ON l.id = c.lora_device_id
     WHERE c.id = ${candidateId} AND c.incident_id = ${incidentId}
   `;
   return candidate;
