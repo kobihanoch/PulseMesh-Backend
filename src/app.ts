@@ -6,6 +6,7 @@ import deviceRoutes from './modules/devices/devices.routes.ts';
 import registrationRoutes from './modules/registrations/registrations.routes.ts';
 import incidentRoutes from './modules/incidents/incidents.routes.ts';
 import telemetryRoutes from './modules/telemetry/telemetry.routes.ts';
+import marketingContentRoutes from './modules/marketing-content/marketing-content.routes.ts';
 import { checkAppVersion } from './shared/middlewares/check-app-version.ts';
 import { errorHandler } from './shared/middlewares/error-handler.ts';
 import { generalLimiter } from './shared/middlewares/rate-limiter.ts';
@@ -44,6 +45,7 @@ export const createApp = () => {
   app.use('/devices', deviceRoutes);
   app.use('/incidents', incidentRoutes);
   app.use('/telemetry', telemetryRoutes);
+  app.use('/marketing-content', marketingContentRoutes);
 
   app.use(errorHandler);
 
