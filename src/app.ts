@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import userRoutes from './modules/auth/auth.routes.ts';
 import deviceRoutes from './modules/devices/devices.routes.ts';
 import registrationRoutes from './modules/registrations/registrations.routes.ts';
+import incidentRoutes from './modules/incidents/incidents.routes.ts';
 import { checkAppVersion } from './shared/middlewares/check-app-version.ts';
 import { errorHandler } from './shared/middlewares/error-handler.ts';
 import { generalLimiter } from './shared/middlewares/rate-limiter.ts';
@@ -40,6 +41,7 @@ export const createApp = () => {
   app.use('/auth', userRoutes);
   app.use('/registrations', registrationRoutes);
   app.use('/devices', deviceRoutes);
+  app.use('/incidents', incidentRoutes);
 
   app.use(errorHandler);
 
