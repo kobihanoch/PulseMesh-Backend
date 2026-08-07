@@ -1,0 +1,3 @@
+CREATE POLICY "guest_can_read_current_registrant" ON "registry"."registrant" AS PERMISSIVE FOR SELECT TO "app_guest" USING ("registry"."registrant"."id" = NULLIF(current_setting('app.registrant_id', true), '')::uuid);--> statement-breakpoint
+ALTER POLICY "guest_can_update_registrant_location" ON "registry"."registrant" TO app_guest USING ("registry"."registrant"."id" = NULLIF(current_setting('app.registrant_id', true), '')::uuid) WITH CHECK ("registry"."registrant"."id" = NULLIF(current_setting('app.registrant_id', true), '')::uuid
+          AND "registry"."registrant"."latitude" IS NOT NULL AND "registry"."registrant"."longitude" IS NOT NULL);

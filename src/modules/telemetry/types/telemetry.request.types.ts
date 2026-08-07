@@ -10,3 +10,13 @@ export const createTelemetryRequest = z.object({
 });
 
 export type CreateTelemetryRequest = z.infer<typeof createTelemetryRequest>['body'];
+
+export const telemetryHistoryRequest = z.object({
+  params: z.object({ deviceId: z.string().uuid() }),
+  query: z.object({
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+  }),
+});
+
+export type TelemetryHistoryRequest = z.infer<typeof telemetryHistoryRequest>;

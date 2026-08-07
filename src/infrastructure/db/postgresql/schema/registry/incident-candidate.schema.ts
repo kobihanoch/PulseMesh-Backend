@@ -3,6 +3,7 @@ import { index, integer, pgPolicy, timestamp, uniqueIndex, uuid } from 'drizzle-
 import { authenticatedRole, guestRole } from '../auth/user.schema.ts';
 import { incident } from './incident.schema.ts';
 import { loraDevice } from './lora-device.schema.ts';
+import { defibrillator } from './defibrillator.schema.ts';
 import { registrySchema } from './registrant.schema.ts';
 
 export const incidentCandidateStatus = registrySchema.enum('incident_candidate_status', ['selected', 'notified', 'accepted', 'declined', 'failed']);
@@ -15,9 +16,10 @@ export const incidentCandidate = registrySchema
       incidentId: uuid('incident_id')
         .notNull()
         .references(() => incident.id, { onDelete: 'cascade' }),
-      loraDeviceId: uuid('lora_device_id')
+      defibrillatorId: uuid('defibrillator_id')
         .notNull()
-        .references(() => loraDevice.id, { onDelete: 'cascade' }),
+        .references(() => defibrillator.id, { onDelete: 'cascade' }),
+      loraDeviceId: uuid('lora_device_id').references(() => loraDevice.id, { onDelete: 'set null' }),
       distanceMeters: integer('distance_meters').notNull(),
       status: incidentCandidateStatus('status').notNull().default('selected'),
       notifiedAt: timestamp('notified_at', { withTimezone: true }),
@@ -25,9 +27,10 @@ export const incidentCandidate = registrySchema
       createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     },
     (table) => [
-      uniqueIndex('incident_candidate_incident_device_unique').on(table.incidentId, table.loraDeviceId),
+      uniqueIndex('incident_candidate_incident_defibrillator_unique').on(table.incidentId, table.defibrillatorId),
       index('incident_candidate_incident_id_idx').on(table.incidentId),
       index('incident_candidate_lora_device_id_idx').on(table.loraDeviceId),
+      index('incident_candidate_defibrillator_id_idx').on(table.defibrillatorId),
       pgPolicy('guest_can_create_incident_candidates', {
         for: 'insert',
         to: guestRole,

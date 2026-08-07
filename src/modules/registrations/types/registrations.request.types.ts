@@ -7,6 +7,11 @@ const registrantFields = z.object({
   medicalTraining: z.string().trim().min(1).max(100).optional(),
 });
 
+const locationInput = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
+
 const defibrillatorInput = z.object({
   isMobile: z.boolean().default(true),
 });
@@ -32,7 +37,7 @@ const equipmentInput = z.discriminatedUnion('type', [
 ]);
 
 export const createRegistrationRequest = z.object({
-  body: registrantFields.extend({ equipment: equipmentInput }),
+  body: registrantFields.extend({ equipment: equipmentInput, location: locationInput.optional() }),
 });
 
 export const listRegistrationsRequest = z.object({
@@ -55,9 +60,14 @@ export const updateRegistrationRequest = z.object({
 });
 
 export const deleteRegistrationRequest = getRegistrationRequest;
+export const updateRegistrantLocationRequest = z.object({
+  params: z.object({ registrantId: z.string().uuid() }),
+  body: locationInput,
+});
 
 export type CreateRegistrationRequest = z.infer<typeof createRegistrationRequest>['body'];
 export type ListRegistrationsRequest = z.infer<typeof listRegistrationsRequest>['query'];
 export type GetRegistrationRequest = z.infer<typeof getRegistrationRequest>;
 export type UpdateRegistrationRequest = z.infer<typeof updateRegistrationRequest>;
 export type DeleteRegistrationRequest = z.infer<typeof deleteRegistrationRequest>;
+export type UpdateRegistrantLocationRequest = z.infer<typeof updateRegistrantLocationRequest>;

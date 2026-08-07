@@ -11,13 +11,16 @@ import {
   getRegistrationRequest,
   listRegistrationsRequest,
   updateRegistrationRequest,
+  updateRegistrantLocationRequest,
 } from './types/registrations.request.types.ts';
 import { registrationResponse, registrationsListResponse } from './types/registrations.response.types.ts';
+import { updateLocation } from './registrations.controller.ts';
 
 const router = Router();
 
 // Public registration
 router.post('/', validate(createRegistrationRequest), asyncHandler(withRlsTx(createRegistration), registrationResponse));
+router.patch('/:registrantId/location', validate(updateRegistrantLocationRequest), asyncHandler(withRlsTx(updateLocation)));
 
 // Admin registration management
 router.use(authenticate, authorize('admin'));

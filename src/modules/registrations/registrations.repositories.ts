@@ -11,14 +11,15 @@ import type {
   RegistrationsCountQueryResult,
 } from './types/registrations.types.ts';
 
-type NewRegistrant = Pick<RegistrantQueryResult, 'id' | 'firstName' | 'lastName' | 'phone' | 'medicalTraining'>;
+type NewRegistrant = Pick<RegistrantQueryResult, 'id' | 'firstName' | 'lastName' | 'phone' | 'medicalTraining' | 'latitude' | 'longitude' | 'lastLocationAt'>;
 type NewDefibrillator = Pick<DefibrillatorQueryResult, 'id' | 'ownerId' | 'isMobile'>;
 type NewLoraDevice = Pick<LoraDeviceQueryResult, 'id' | 'ownerId' | 'defibrillatorId' | 'devEui'>;
 
 export async function queryCreateRegistrant(registrant: NewRegistrant) {
   await sql`
-    INSERT INTO registry.registrant (id, first_name, last_name, phone, medical_training)
-    VALUES (${registrant.id}, ${registrant.firstName}, ${registrant.lastName}, ${registrant.phone}, ${registrant.medicalTraining})
+    INSERT INTO registry.registrant (id, first_name, last_name, phone, medical_training, latitude, longitude, last_location_at)
+    VALUES (${registrant.id}, ${registrant.firstName}, ${registrant.lastName}, ${registrant.phone}, ${registrant.medicalTraining},
+      ${registrant.latitude}, ${registrant.longitude}, ${registrant.lastLocationAt})
   `;
 }
 
@@ -44,6 +45,7 @@ export async function queryListRegistrants(limit: number, offset: number, search
       last_name AS "lastName",
       phone,
       medical_training AS "medicalTraining",
+      latitude, longitude, last_location_at AS "lastLocationAt",
       created_at AS "createdAt",
       updated_at AS "updatedAt"
     FROM registry.registrant
@@ -76,6 +78,7 @@ export async function queryGetRegistrant(registrantId: string) {
       last_name AS "lastName",
       phone,
       medical_training AS "medicalTraining",
+      latitude, longitude, last_location_at AS "lastLocationAt",
       created_at AS "createdAt",
       updated_at AS "updatedAt"
     FROM registry.registrant
@@ -147,10 +150,24 @@ export async function queryUpdateRegistrant(registrant: NewRegistrant) {
       last_name AS "lastName",
       phone,
       medical_training AS "medicalTraining",
+      latitude, longitude, last_location_at AS "lastLocationAt",
       created_at AS "createdAt",
       updated_at AS "updatedAt"
   `;
   return updatedRegistrant;
+}
+
+export async function queryUpdateRegistrantLocation(registrantId: string, location: { latitude: number; longitude: number }) {
+  await sql`SELECT set_config('app.registrant_id', ${registrantId}, true)`;
+  const [registrant] = await sql<[RegistrantQueryResult?]>`
+    UPDATE registry.registrant
+    SET latitude = ${location.latitude}, longitude = ${location.longitude}, last_location_at = NOW(), updated_at = NOW()
+    WHERE id = ${registrantId}
+    RETURNING id, first_name AS "firstName", last_name AS "lastName", phone,
+      medical_training AS "medicalTraining", latitude, longitude, last_location_at AS "lastLocationAt",
+      created_at AS "createdAt", updated_at AS "updatedAt"
+  `;
+  return registrant;
 }
 
 export async function queryDeleteRegistrant(registrantId: string) {

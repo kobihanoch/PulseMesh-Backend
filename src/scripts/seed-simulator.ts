@@ -32,6 +32,8 @@ for (let index = 1; index <= count; index++) {
     firstName: `Simulator ${index}`,
     phone: `050900${String(index).padStart(4, '0')}`,
     medicalTraining: index % 3 === 0 ? 'First aid' : null,
+    ...locationNearHaifa(index),
+    lastLocationAt: new Date(),
   });
 
   if (hasDefibrillator) {
