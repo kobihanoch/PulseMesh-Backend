@@ -1,6 +1,6 @@
-import type { Incident } from '../../../infrastructure/db/schema/registry/incident.schema.ts';
-import type { IncidentCandidate } from '../../../infrastructure/db/schema/registry/incident-candidate.schema.ts';
-import type { LoraDevice } from '../../../infrastructure/db/schema/registry/lora-device.schema.ts';
+import type { Incident } from '../../../infrastructure/db/postgresql/schema/registry/incident.schema.ts';
+import type { IncidentCandidate } from '../../../infrastructure/db/postgresql/schema/registry/incident-candidate.schema.ts';
+import type { LoraDevice } from '../../../infrastructure/db/postgresql/schema/registry/lora-device.schema.ts';
 
 export type IncidentStatus = Incident['status'];
 

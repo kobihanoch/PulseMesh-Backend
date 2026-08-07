@@ -2,9 +2,9 @@ import dotenv from 'dotenv';
 import { inArray } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { defibrillator, type NewDefibrillator } from '../infrastructure/db/schema/registry/defibrillator.schema.ts';
-import { loraDevice, type NewLoraDevice } from '../infrastructure/db/schema/registry/lora-device.schema.ts';
-import { registrant, type NewRegistrant } from '../infrastructure/db/schema/registry/registrant.schema.ts';
+import { defibrillator, type NewDefibrillator } from '../infrastructure/db/postgresql/schema/registry/defibrillator.schema.ts';
+import { loraDevice, type NewLoraDevice } from '../infrastructure/db/postgresql/schema/registry/lora-device.schema.ts';
+import { registrant, type NewRegistrant } from '../infrastructure/db/postgresql/schema/registry/registrant.schema.ts';
 
 const nodeEnv = process.argv[2] ?? process.env.NODE_ENV ?? 'development';
 dotenv.config({ path: `.env.${nodeEnv}` });
@@ -58,7 +58,12 @@ for (let index = 1; index <= count; index++) {
 }
 
 await db.transaction(async (tx) => {
-  await tx.delete(registrant).where(inArray(registrant.id, registrants.map(({ id }) => id!)));
+  await tx.delete(registrant).where(
+    inArray(
+      registrant.id,
+      registrants.map(({ id }) => id!),
+    ),
+  );
   await tx.insert(registrant).values(registrants);
   await tx.insert(defibrillator).values(defibrillators);
   await tx.insert(loraDevice).values(loraDevices);

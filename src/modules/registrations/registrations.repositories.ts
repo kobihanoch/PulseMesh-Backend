@@ -1,4 +1,4 @@
-import sql from '../../infrastructure/db/db.client.ts';
+import sql from '../../infrastructure/db/postgresql/postgresql.client.ts';
 import type {
   DefibrillatorQueryResult,
   DefibrillatorsByOwner,

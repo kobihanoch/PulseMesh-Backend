@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { withRlsTx } from '../../infrastructure/db/db.client.ts';
+import { withRlsTx } from '../../infrastructure/db/postgresql/postgresql.client.ts';
 import { asyncHandler } from '../../shared/middlewares/async-handler.ts';
 import { authenticate } from '../../shared/middlewares/authentication.ts';
 import { authorize } from '../../shared/middlewares/authorization.ts';

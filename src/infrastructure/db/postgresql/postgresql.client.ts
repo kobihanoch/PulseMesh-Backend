@@ -3,9 +3,9 @@ import dns from 'dns';
 import { RequestHandler } from 'express';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import postgres from 'postgres';
-import { databaseConfig } from '../../config/database.config.ts';
-import { appConfig } from '../../config/app.config.ts';
-import { queryGetUserAuthorizationDetails } from '../../modules/auth/auth.repositories.ts';
+import { databaseConfig } from '../../../config/database.config.ts';
+import { appConfig } from '../../../config/app.config.ts';
+import { queryGetUserAuthorizationDetails } from '../../../modules/auth/auth.repositories.ts';
 
 dns.setDefaultResultOrder('ipv4first');
 

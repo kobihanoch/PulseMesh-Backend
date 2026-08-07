@@ -17,6 +17,18 @@ services:
       timeout: 5s
       retries: 10
 
+  mongo:
+    image: mongo:8
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_dev_data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   server:
     container_name: server
     build:
@@ -36,6 +48,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mongo:
+        condition: service_healthy
 
 volumes:
   postgres_dev_data:
+  mongo_dev_data:

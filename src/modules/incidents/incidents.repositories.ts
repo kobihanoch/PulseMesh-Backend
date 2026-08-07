@@ -1,6 +1,6 @@
-import sql from '../../infrastructure/db/db.client.ts';
+import sql from '../../infrastructure/db/postgresql/postgresql.client.ts';
 import { randomUUID } from 'node:crypto';
-import type { Incident } from '../../infrastructure/db/schema/registry/incident.schema.ts';
+import type { Incident } from '../../infrastructure/db/postgresql/schema/registry/incident.schema.ts';
 import type { CreateIncidentRequest } from './types/incidents.request.types.ts';
 import type { IncidentCandidateDetails, IncidentDetails, IncidentStatus, NearbyDevice } from './types/incidents.types.ts';
 
