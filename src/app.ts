@@ -7,7 +7,6 @@ import registrationRoutes from './modules/registrations/registrations.routes.ts'
 import incidentRoutes from './modules/incidents/incidents.routes.ts';
 import telemetryRoutes from './modules/telemetry/telemetry.routes.ts';
 import marketingContentRoutes from './modules/marketing-content/marketing-content.routes.ts';
-import { checkAppVersion } from './shared/middlewares/check-app-version.ts';
 import { errorHandler } from './shared/middlewares/error-handler.ts';
 import { generalLimiter } from './shared/middlewares/rate-limiter.ts';
 import cookieParser from 'cookie-parser';
@@ -37,8 +36,6 @@ export const createApp = () => {
   });
 
   app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
-
-  app.use(checkAppVersion);
 
   app.use('/auth', userRoutes);
   app.use('/registrations', registrationRoutes);
