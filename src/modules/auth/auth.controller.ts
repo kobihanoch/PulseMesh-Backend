@@ -75,7 +75,8 @@ function storeTokensInHTTPOnlyCookie(res: Response, refreshToken: string, access
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: refreshExp! * 1000 - Date.now(),
-    path: '/auth/',
+    // Next's refresh Route Handler must receive this cookie too.
+    path: '/',
   });
 
   res.cookie('accessToken', accessToken, {
@@ -92,7 +93,7 @@ function clearTokensInHTTPOnlyCookie(res: Response) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    path: '/auth/',
+    path: '/',
   });
 
   res.clearCookie('accessToken', {
