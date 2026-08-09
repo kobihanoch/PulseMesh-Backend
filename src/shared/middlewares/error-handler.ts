@@ -1,11 +1,6 @@
-import { ErrorRequestHandler, Response } from "express";
+import { ErrorRequestHandler, Response } from 'express';
 
-export const errorHandler: ErrorRequestHandler = (
-  err,
-  req,
-  res,
-  next,
-): Response<{ success: boolean; message: string }> => {
+export const errorHandler: ErrorRequestHandler = (err, req, res, next): Response<{ success: boolean; message: string }> => {
   // Log to dev console error stack
   // Log to prod console error message
   const statusCode = err.statusCode || 500;
@@ -14,17 +9,17 @@ export const errorHandler: ErrorRequestHandler = (
   console.error(
     {
       err,
-      event: "request.failed",
+      event: 'request.failed',
       statusCode,
       method: req.method,
       path: req.originalUrl,
       userId: req.user?.id,
     },
-    err.message || "Unhandled request error",
+    err.message || 'Unhandled request error',
   );
 
   return res.status(statusCode).json({
     success: false,
-    message: err.message || "Internal Server Error",
+    message: err.message || 'Internal Server Error',
   });
 };
