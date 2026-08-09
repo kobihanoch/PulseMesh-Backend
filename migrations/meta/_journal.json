@@ -71,6 +71,13 @@
       "when": 1786114720077,
       "tag": "0009_fix_first_phone_location_policy",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786280400000,
+      "tag": "0010_allow_guest_registration_location",
+      "breakpoints": true
     }
   ]
 }

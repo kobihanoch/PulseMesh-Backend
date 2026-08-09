@@ -19,7 +19,7 @@ export const createApp = () => {
 
   app.use(
     cors({
-      origin: 'localhost',
+      origin: 'http://localhost:3000',
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'x-app-version', 'x-client-id'],
       exposedHeaders: ['x-min-version'],
