@@ -51,3 +51,12 @@ export async function queryGetUserAuthorizationDetails(userId: string) {
   `;
   return user;
 }
+
+export async function queryGetUserById(userId: string) {
+  const [user] = await sql`
+    SELECT id, username, role, created_at AS "createdAt", updated_at AS "updatedAt"
+    FROM app_auth.user
+    WHERE id = ${userId}::uuid
+  `;
+  return user;
+}

@@ -6,6 +6,7 @@ import {
   queryGetUserMetadata,
   queryInjectIdentifier,
   queryInjectUserID,
+  queryGetUserById,
 } from './auth.repositories.ts';
 import { decodeRefreshJWT, signTokens } from './auth.utils.ts';
 
@@ -55,3 +56,5 @@ export const refreshSession = async (staleRefreshToken: string | null | undefine
     refreshToken,
   };
 };
+
+export const getCurrentUser = (userId: string) => queryGetUserById(userId);

@@ -5,7 +5,7 @@ import { authenticate } from '../../shared/middlewares/authentication.ts';
 import { authorize } from '../../shared/middlewares/authorization.ts';
 import { loginIpLimiter, loginLimiter } from '../../shared/middlewares/rate-limiter.ts';
 import { validate } from '../../shared/middlewares/validate-request.ts';
-import { loginUser, logoutUser, refreshAccessToken } from './auth.controller.ts';
+import { getMe, loginUser, logoutUser, refreshAccessToken } from './auth.controller.ts';
 import { loginRequest } from './types/auth.request.types.ts';
 import { loginResponse } from './types/auth.response.types.ts';
 
@@ -16,6 +16,7 @@ router.post('/login', loginLimiter, loginIpLimiter, validate(loginRequest), asyn
 router.post('/refresh', asyncHandler(withRlsTx(refreshAccessToken))); // Refresh token
 
 // User routes
+router.get('/me', authenticate, authorize('user', 'admin'), asyncHandler(withRlsTx(getMe), loginResponse));
 router.post('/logout', authenticate, authorize('user', 'admin'), asyncHandler(withRlsTx(logoutUser)));
 
 export default router;

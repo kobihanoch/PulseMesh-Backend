@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
-import { authenticateUser, logoutFromAllDevices, refreshSession } from './auth.service.ts';
+import { authenticateUser, getCurrentUser, logoutFromAllDevices, refreshSession } from './auth.service.ts';
 import { decodeAccessJWT, decodeRefreshJWT, getAccessToken, getRefreshToken } from './auth.utils.ts';
 import { LoginRequest } from './types/auth.request.types.ts';
 import { LoginResponse } from './types/auth.response.types.ts';
@@ -18,6 +18,16 @@ export const loginUser = async (req: Request<{}, LoginResponse, LoginRequest>, r
   const { accessToken, refreshToken, userMetadata } = await authenticateUser(identifier, password);
   storeTokensInHTTPOnlyCookie(res, refreshToken, accessToken);
   return res.status(200).json(userMetadata);
+};
+
+/**
+ * Return the currently authenticated user's public metadata.
+ *
+ * Route: GET /auth/me
+ * Access: User or admin
+ */
+export const getMe = async (req: Request, res: Response<LoginResponse>): Promise<Response<LoginResponse>> => {
+  return res.status(200).json((await getCurrentUser(req.user!.id)) as LoginResponse);
 };
 
 /**
