@@ -48,7 +48,8 @@ export const refreshSession = async (staleRefreshToken: string | null | undefine
   // If arriving access token is **exist AND valid** then return
   if (staleAccessToken) {
     const decodedAccessToken = decodeAccessJWT(staleAccessToken);
-    if (decodedAccessToken) {
+    const hasEnoughTime = decodedAccessToken?.exp && decodedAccessToken.exp * 1000 > Date.now() + 15_000;
+    if (hasEnoughTime) {
       const { tokenVersion } = await queryGetUserAuthorizationDetails(decodedAccessToken.id);
       if (tokenVersion === decodedAccessToken.tokenVer) {
         // Access token is valid

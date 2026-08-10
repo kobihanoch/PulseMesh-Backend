@@ -1,6 +1,7 @@
 import { User } from '../../../infrastructure/db/postgresql/schema/auth/user.schema.ts';
+import type { JwtPayload } from 'jsonwebtoken';
 
-export interface JWTCustomPayload {
+export interface JWTCustomPayload extends JwtPayload {
   id: User['id'];
   role: User['role'];
   tokenVer: User['tokenVersion'];
