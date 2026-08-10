@@ -3,13 +3,12 @@ import createError from 'http-errors';
 import {
   queryBumpTokenVersion,
   queryBumpTokenVersionCAS,
+  queryGetUserById,
   queryGetUserMetadata,
   queryInjectIdentifier,
   queryInjectUserID,
-  queryGetUserById,
-  queryGetUserAuthorizationDetails,
 } from './auth.repositories.ts';
-import { decodeAccessJWT, decodeRefreshJWT, signTokens } from './auth.utils.ts';
+import { decodeRefreshJWT, signTokens } from './auth.utils.ts';
 
 export const authenticateUser = async (identifier: string, password: string) => {
   await queryInjectIdentifier(identifier);
@@ -40,26 +39,10 @@ export const logoutFromAllDevices = async (refreshToken: string | null) => {
   }
 };
 
-export const refreshSession = async (staleRefreshToken: string | null | undefined, staleAccessToken: string | null | undefined) => {
+export const refreshSession = async (staleRefreshToken: string | null | undefined) => {
   if (!staleRefreshToken) throw createError(401, 'No refresh token provided');
   const decoded = decodeRefreshJWT(staleRefreshToken);
   if (!decoded) throw createError(401, 'Invalid or expired refresh token');
-
-  // If arriving access token is **exist AND valid** then return
-  if (staleAccessToken) {
-    const decodedAccessToken = decodeAccessJWT(staleAccessToken);
-    const hasEnoughTime = decodedAccessToken?.exp && decodedAccessToken.exp * 1000 > Date.now() + 15_000;
-    if (hasEnoughTime) {
-      const { tokenVersion } = await queryGetUserAuthorizationDetails(decodedAccessToken.id);
-      if (tokenVersion === decodedAccessToken.tokenVer) {
-        // Access token is valid
-        return {
-          accessToken: staleAccessToken,
-          refreshToken: staleRefreshToken,
-        };
-      }
-    }
-  }
 
   await queryInjectUserID(decoded.id);
   const refreshedUser = await queryBumpTokenVersionCAS(decoded);

@@ -16,6 +16,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     return next(createError(401, 'Access token is not valid'));
   }
 
+  // If acces token has less than 15 seconds then deny
+  const hasEnoughTime = decoded.exp && decoded.exp * 1000 > Date.now() + 15_000;
+  if (!hasEnoughTime) {
+    return next(createError(401, 'Access token is not valid'));
+  }
+
   // Inject to request
   // JWT has already been cryptographically verified
   req.user = {
