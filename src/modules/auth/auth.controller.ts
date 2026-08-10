@@ -60,7 +60,10 @@ export const logoutUser = async (req: Request, res: Response): Promise<Response>
  */
 export const refreshAccessToken = async (req: Request, res: Response): Promise<Response> => {
   const staleRefreshToken = getRefreshToken(req);
-  const { refreshToken, accessToken } = await refreshSession(staleRefreshToken);
+  const staleAccessToken = getAccessToken(req); // Can be null | undefined
+
+  // Only if access token is missing / not valid then do a real refresh
+  const { refreshToken, accessToken } = await refreshSession(staleRefreshToken, staleAccessToken);
   storeTokensInHTTPOnlyCookie(res, refreshToken, accessToken);
   return res.status(204).end();
 };
