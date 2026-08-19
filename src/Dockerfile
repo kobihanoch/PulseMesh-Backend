@@ -8,9 +8,9 @@ RUN npm ci
 COPY tsconfig.json ./tsconfig.json
 COPY src ./src
 
-RUN npx tsc --noEmit
+RUN npm run build
 RUN npm prune --omit=dev
 
 EXPOSE 5000
 
-CMD ["npm", "run", "start:server"]
+CMD ["npm", "start"]
