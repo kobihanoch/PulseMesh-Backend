@@ -16,7 +16,7 @@ export async function getCyclingRoute({ start, end }: CyclingRouteRequest): Prom
   const apiKey = process.env.OPENROUTESERVICE_API_KEY;
   if (!apiKey) throw createError(503, 'OpenRouteService API key is missing');
 
-  const response = await fetch('https://api.heigit.org/openrouteservice/v2/directions/cycling-regular/geojson', {
+  const request = {
     method: 'POST',
     headers: { Authorization: apiKey, 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -28,7 +28,9 @@ export async function getCyclingRoute({ start, end }: CyclingRouteRequest): Prom
       language: 'he',
       instructions: true,
     }),
-  });
+  };
+
+  const response = await fetchRoute(request);
 
   if (!response.ok) {
     console.error('OpenRouteService error:', response.status, await response.text());
@@ -45,4 +47,17 @@ export async function getCyclingRoute({ start, end }: CyclingRouteRequest): Prom
     durationSeconds: route.properties.summary.duration,
     steps: route.properties.segments.flatMap((segment) => segment.steps),
   };
+}
+
+async function fetchRoute(request: RequestInit) {
+  try {
+    return await fetch('https://api.heigit.org/openrouteservice/v2/directions/cycling-regular/geojson', request);
+  } catch {
+    // Retry one transient DNS/network failure before reporting service unavailability.
+    try {
+      return await fetch('https://api.heigit.org/openrouteservice/v2/directions/cycling-regular/geojson', request);
+    } catch {
+      throw createError(503, 'Routing service is temporarily unavailable');
+    }
+  }
 }
