@@ -1,5 +1,6 @@
-import { querySaveNotifications } from './notifications.repository.ts';
+import { queryNotifications, querySaveNotifications } from './notifications.repository.ts';
 import type { NotificationChannels } from './notifications.types.ts';
+import type { ListNotificationsRequest } from './types/notifications.request.types.ts';
 
 export async function simulateIncidentNotifications(
   incidentId: string,
@@ -49,4 +50,17 @@ export async function simulateLowBatteryNotification(registrantId: string, devic
 
 export function getNotificationChannels(hasLora: boolean): NotificationChannels {
   return { push: 'simulated', lora: hasLora ? 'simulated' : 'unavailable' };
+}
+
+export async function getNotificationsPage(query: ListNotificationsRequest) {
+  const { items, totalItems } = await queryNotifications(query);
+  return {
+    items,
+    pagination: {
+      page: query.page,
+      limit: query.limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / query.limit),
+    },
+  };
 }

@@ -8,6 +8,7 @@ import incidentRoutes from './modules/incidents/incidents.routes.ts';
 import telemetryRoutes from './modules/telemetry/telemetry.routes.ts';
 import marketingContentRoutes from './modules/marketing-content/marketing-content.routes.ts';
 import routingRoutes from './modules/routing/routing.routes.ts';
+import notificationRoutes from './modules/notifications/notifications.routes.ts';
 import { errorHandler } from './shared/middlewares/error-handler.ts';
 import { generalLimiter } from './shared/middlewares/rate-limiter.ts';
 import cookieParser from 'cookie-parser';
@@ -45,6 +46,7 @@ export const createApp = () => {
   app.use('/telemetry', telemetryRoutes);
   app.use('/marketing-content', marketingContentRoutes);
   app.use('/routes', routingRoutes);
+  app.use('/notifications', notificationRoutes);
 
   app.use(errorHandler);
 
