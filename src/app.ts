@@ -21,7 +21,7 @@ export const createApp = () => {
 
   app.use(
     cors({
-      origin: 'http://localhost:3000',
+      origin: 'http://pulsemesh.kobihanoch.com',
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'x-app-version', 'x-client-id'],
       exposedHeaders: ['x-min-version'],
