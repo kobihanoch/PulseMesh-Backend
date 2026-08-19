@@ -1,40 +1,31 @@
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import { setupSentryErrorHandler } from './infrastructure/sentry.ts';
-import { botBlocker } from './shared/middlewares/bot-blocker.ts';
-import { checkAppVersion } from './shared/middlewares/check-app-version.ts';
+import userRoutes from './modules/auth/auth.routes.ts';
+import deviceRoutes from './modules/devices/devices.routes.ts';
+import registrationRoutes from './modules/registrations/registrations.routes.ts';
+import incidentRoutes from './modules/incidents/incidents.routes.ts';
+import telemetryRoutes from './modules/telemetry/telemetry.routes.ts';
+import marketingContentRoutes from './modules/marketing-content/marketing-content.routes.ts';
+import routingRoutes from './modules/routing/routing.routes.ts';
+import notificationRoutes from './modules/notifications/notifications.routes.ts';
 import { errorHandler } from './shared/middlewares/error-handler.ts';
 import { generalLimiter } from './shared/middlewares/rate-limiter.ts';
-import { requestLogger } from './shared/middlewares/request-logger.ts';
-import aerobicsRoutes from './modules/aerobics/aerobics.routes.ts';
-import analyticsRoutes from './modules/analytics/analytics.routes.ts';
-import authRoutes from './modules/auth/auth.routes.ts';
-import bootsrapRoutes from './modules/bootstrap/bootstrap.routes.ts';
-import exercisesRoutes from './modules/exercises/exercises.routes.ts';
-import messagesRoutes from './modules/messages/messages.routes.ts';
-import oauthRoutes from './modules/oauth/oauth.routes.ts';
-import pushRoutes from './modules/push/push.routes.ts';
-import userRoutes from './modules/user/user.routes.ts';
-import videoAnalysisRoutes from './modules/video-analysis/video-analysis.routes.ts';
-import webSocketsRoutes from './modules/web-sockets/web-sockets.routes.ts';
-import workoutRoutes from './modules/workout/workout.routes.ts';
+import cookieParser from 'cookie-parser';
 
 export const createApp = () => {
   const app = express();
 
   app.use(express.json());
+  app.use(cookieParser());
 
   app.use(
     cors({
-      origin: [
-        /*"https://kobihanoch.github.io",
-        "https://strongtogether-privacy.kobihanoch.com",*/
-        'https://strongtogether.kobihanoch.com',
-      ],
-      methods: ['POST', 'PUT', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-      credentials: false,
+      origin: 'http://localhost:3000',
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'x-app-version', 'x-client-id'],
+      exposedHeaders: ['x-min-version'],
+      credentials: true,
     }),
   );
 
@@ -48,24 +39,15 @@ export const createApp = () => {
 
   app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
-  app.use(requestLogger);
-  app.use(botBlocker);
-  app.use(checkAppVersion);
+  app.use('/auth', userRoutes);
+  app.use('/registrations', registrationRoutes);
+  app.use('/devices', deviceRoutes);
+  app.use('/incidents', incidentRoutes);
+  app.use('/telemetry', telemetryRoutes);
+  app.use('/marketing-content', marketingContentRoutes);
+  app.use('/routes', routingRoutes);
+  app.use('/notifications', notificationRoutes);
 
-  app.use('/api/users', userRoutes);
-  app.use('/api/auth', authRoutes);
-  app.use('/api/oauth', oauthRoutes);
-  app.use('/api/workouts', workoutRoutes);
-  app.use('/api/messages', messagesRoutes);
-  app.use('/api/exercises', exercisesRoutes);
-  app.use('/api/analytics', analyticsRoutes);
-  app.use('/api/aerobics', aerobicsRoutes);
-  app.use('/api/push', pushRoutes);
-  app.use('/api/ws', webSocketsRoutes);
-  app.use('/api/bootstrap', bootsrapRoutes);
-  app.use('/api/videoanalysis', videoAnalysisRoutes);
-
-  setupSentryErrorHandler(app);
   app.use(errorHandler);
 
   return app;

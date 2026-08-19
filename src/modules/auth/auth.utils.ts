@@ -1,77 +1,82 @@
-import { Request } from "express";
-import jwt from "jsonwebtoken";
-import { authConfig } from "../../../config/auth.config.ts";
-import { JWTPayload } from "./types/auth.types.js";
+import { Request } from 'express';
+import jwt, { SignOptions } from 'jsonwebtoken';
+import { authConfig } from '../../config/auth.config.ts';
+import { JWTCustomPayload, UserAuthorizationDetails } from './types/auth.types.ts';
 
 /*
- * Decode JWT access/refresh token
+ * SIgn JWT tokens pair
  */
-export const decodeJWT = (refreshToken: string | null): JWTPayload | null => {
-  if (!refreshToken) return null;
+export const signTokens = (user: UserAuthorizationDetails, accessExp: SignOptions['expiresIn'], refreshExp: SignOptions['expiresIn']) => {
+  const userClaims: JWTCustomPayload = {
+    id: user.id,
+    role: user.role,
+    tokenVer: user.tokenVersion,
+  };
+
+  const accessToken = signAccessJWT(userClaims, accessExp);
+  const refreshToken = signRefreshJWT(userClaims, refreshExp);
+
+  return { refreshToken, accessToken };
+};
+
+/*
+ * Decode JWT access token
+ */
+export const decodeAccessJWT = (token: string | null): JWTCustomPayload | null => {
+  if (!token) return null;
   try {
-    return jwt.verify(refreshToken, authConfig.jwtRefreshSecret);
+    return jwt.verify(token, authConfig.jwtAccessSecret) as JWTCustomPayload;
   } catch {
     return null;
   }
 };
 
 /*
- * Sign JWT access/refresh token
+ * Decode JWT refresh token
  */
-export const signJWT = (claims: JWTPayload, exp: string): string => {
+export const decodeRefreshJWT = (token: string | null): JWTCustomPayload | null => {
+  if (!token) return null;
+  try {
+    return jwt.verify(token, authConfig.jwtRefreshSecret) as JWTCustomPayload;
+  } catch {
+    return null;
+  }
+};
+
+/*
+ * Sign JWT access token
+ */
+const signAccessJWT = (claims: JWTCustomPayload, exp: SignOptions['expiresIn']): string => {
   return jwt.sign(claims, authConfig.jwtAccessSecret, { expiresIn: exp });
+};
+
+/*
+ * Sign JWT access token
+ */
+const signRefreshJWT = (claims: JWTCustomPayload, exp: SignOptions['expiresIn']): string => {
+  return jwt.sign(claims, authConfig.jwtRefreshSecret, { expiresIn: exp });
+};
+
+/*
+ * Extracts a Bearer token from a header string safely.
+ */
+export const extractBearerToken = (rawHeader: string | undefined): string | null => {
+  if (!rawHeader) return null;
+  return rawHeader.startsWith('Bearer ') ? rawHeader.slice(7).trim() : rawHeader.trim() || null;
 };
 
 /*
  * Extracts the refresh token from the x-refresh-token header.
  */
 export const getRefreshToken = (req: Request): string | null => {
-  const refreshHeader = req.headers["x-refresh-token"] as string | undefined;
-  return extractDpopToken(refreshHeader) || extractBearerToken(refreshHeader);
-};
-
-/*
- * Extracts a Bearer token from a header string safely.
- */
-export const extractBearerToken = (
-  rawHeader: string | undefined,
-): string | null => {
-  if (!rawHeader || typeof rawHeader !== "string") return null;
-  return rawHeader.startsWith("Bearer ")
-    ? rawHeader.slice(7).trim()
-    : rawHeader.trim() || null;
-};
-
-export const extractDpopToken = (
-  rawHeader: string | undefined,
-): string | null => {
-  if (!rawHeader || typeof rawHeader !== "string") return null;
-  if (!rawHeader.startsWith("DPoP ")) return null;
-  return rawHeader.slice(5).trim() || null;
+  const token = req.cookies.refreshToken;
+  return extractBearerToken(token);
 };
 
 /*
  * Extracts the access token from the Authorization header.
  */
 export const getAccessToken = (req: Request): string | null => {
-  const authHeader = req.headers.authorization;
-  return extractDpopToken(authHeader) || extractBearerToken(authHeader);
-};
-
-export const decodeAccessToken = (
-  accessToken: string | null,
-): AccessTokenPayload | null => {
-  if (!accessToken) return null;
-  try {
-    return jwt.verify(
-      accessToken,
-      authConfig.jwtAccessSecret,
-    ) as AccessTokenPayload;
-  } catch (e) {
-    return null;
-  }
-};
-
-export const generateJti = (): string => {
-  return crypto.randomBytes(16).toString("hex");
+  const token = req.cookies.accessToken;
+  return extractBearerToken(token);
 };

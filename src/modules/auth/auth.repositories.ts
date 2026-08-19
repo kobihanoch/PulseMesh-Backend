@@ -1,28 +1,62 @@
-import sql from "../../infrastructure/db.client.js";
+import sql from '../../infrastructure/db/postgresql/postgresql.client.ts';
+import { JWTCustomPayload, UserAuthorizationDetails, UserMetaData } from './types/auth.types.ts';
 
-// With bump
+export async function queryInjectIdentifier(identifier: string) {
+  await sql`SELECT set_config('app.login_identifier', ${identifier}, true)`;
+}
+
+export async function queryInjectUserID(userId: string) {
+  await sql`SELECT set_config('app.user_id', ${userId}, true)`;
+}
+
 export async function queryGetUserMetadata(identifier: string) {
-  return sql`UPDATE auth.users u SET u.token_version = u.token_version + 1 
-  WHERE u.username = ${identifier}::text OR u.email = ${identifier}::text
-  RETURNING u.id::uuid, u.username, u.first_name, u.last_name, u.email, u.token_version`;
+  const [user] = await sql<[UserMetaData?]>`
+    SELECT
+      u.id::uuid, 
+      u.username, 
+      u.role,
+      u.token_version as "tokenVersion",
+      u.created_at as "createdAt",
+      u.updated_at as "updatedAt",
+      u.password_hash as "passwordHash"
+    FROM app_auth.user u
+    WHERE u.username = ${identifier}`;
+
+  return user;
 }
 
-export async function queryBumpTokenVersionAndGetSelfDataCAS(
-  userId: string,
-  prevTokenVer: number,
-): Promise<UserAfterBump[]> {
-  return sql<UserAfterBump[]>`
-    UPDATE users 
+export async function queryBumpTokenVersion(userId: string) {
+  const [bumpedUser] = await sql<[UserAuthorizationDetails]>`
+    UPDATE app_auth.user 
     SET token_version = token_version + 1 
-    WHERE id = ${userId}::uuid AND token_version = ${prevTokenVer} 
-    RETURNING token_version, (to_jsonb(users) - 'password' - 'token_version') AS user_data
-  `;
+    WHERE id = ${userId}::uuid
+    RETURNING token_version as "tokenVersion", id, role`;
+
+  return bumpedUser;
 }
 
-export const queryGetCurrentTokenVersion = async (
-  userId: string,
-): Promise<TokenVersionResult[]> => {
-  return sql<TokenVersionResult[]>`
-    SELECT token_version FROM users WHERE id=${userId}::uuid
+export async function queryBumpTokenVersionCAS(token: JWTCustomPayload) {
+  const [refreshedUser] = await sql<[UserAuthorizationDetails?]>`
+    UPDATE app_auth.user 
+    SET token_version = token_version + 1 
+    WHERE id = ${token.id}::uuid AND token_version = ${token.tokenVer}
+    RETURNING token_version as "tokenVersion", id, role`;
+
+  return refreshedUser;
+}
+
+export async function queryGetUserAuthorizationDetails(userId: string) {
+  const [user] = await sql<[UserAuthorizationDetails]>`
+    SELECT token_version as "tokenVersion", id, role FROM app_auth.user WHERE id=${userId}::uuid
   `;
-};
+  return user;
+}
+
+export async function queryGetUserById(userId: string) {
+  const [user] = await sql`
+    SELECT id, username, role, created_at AS "createdAt", updated_at AS "updatedAt"
+    FROM app_auth.user
+    WHERE id = ${userId}::uuid
+  `;
+  return user;
+}

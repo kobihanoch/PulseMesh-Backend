@@ -1,123 +1,59 @@
-import bcrypt from "bcryptjs";
-import createError from "http-errors";
-import jwt from "jsonwebtoken";
+import bcrypt from 'bcryptjs';
+import createError from 'http-errors';
 import {
-  queryBumpTokenVersionAndGetSelfData,
-  queryBumpTokenVersionAndGetSelfDataCAS,
+  queryBumpTokenVersion,
+  queryBumpTokenVersionCAS,
+  queryGetUserById,
   queryGetUserMetadata,
-  queryUpdateExpoPushTokenToNull,
-} from "./auth.repositories.js";
-import { decodeRefreshToken, signJWT } from "./auth.utils.js";
-import { LoginResponse } from "./types/auth.response.types.js";
-import { JWTPayload } from "./types/auth.types.js";
+  queryInjectIdentifier,
+  queryInjectUserID,
+} from './auth.repositories.ts';
+import { decodeRefreshJWT, signTokens } from './auth.utils.ts';
 
-export const loginUser = async (
-  identifier: string,
-  password: string,
-): Promise<LoginResponse> => {
-  const [user = null] = await queryGetUserMetadata(identifier);
-  if (!user) throw createError(401, "Invalid credentials");
+export const authenticateUser = async (identifier: string, password: string) => {
+  await queryInjectIdentifier(identifier);
+  const user = await queryGetUserMetadata(identifier);
 
-  const isMatch = await bcrypt.compare(password, user.password!);
-  if (!isMatch) throw createError(401, "Invalid credentials");
+  if (!user) throw createError(401, 'Invalid credentials');
 
-  const userClaims: JWTPayload = {
-    id: user.id,
-    role: user.role,
-    tokenVer: user.tokenVersion,
-  };
+  const isMatch = await bcrypt.compare(password, user.passwordHash!);
+  if (!isMatch) throw createError(401, 'Invalid credentials');
 
-  const accessToken = signJWT(userClaims, "5m");
-  const refreshToken = signJWT(userClaims, "15d");
+  const bumpedUser = await queryBumpTokenVersion(user.id);
+  const { accessToken, refreshToken } = signTokens(bumpedUser, '5m', '15d');
+  const { tokenVersion, passwordHash, ...userWithoutTokenVersionAndPassword } = user;
 
   return {
-    accessJWT: accessToken,
-    refreshJWT: refreshToken,
-    userMetadata: user,
+    accessToken,
+    refreshToken,
+    userMetadata: userWithoutTokenVersionAndPassword,
   };
 };
 
-export const logoutUserData = async (
-  refreshToken: string | null | undefined,
-): Promise<void> => {
-  const decodedRefresh = decodeRefreshToken(
-    refreshToken ?? null,
-  ) as AccessTokenPayload | null;
+export const logoutFromAllDevices = async (refreshToken: string | null) => {
+  if (!refreshToken) return;
+  const decodedRefresh = decodeRefreshJWT(refreshToken);
 
   if (decodedRefresh) {
-    await queryBumpTokenVersionAndGetSelfData(decodedRefresh.id);
+    await queryBumpTokenVersion(decodedRefresh.id);
   }
 };
 
-export const refreshAccessTokenData = async (
-  refreshToken: string | null | undefined,
-  dpopJkt: string | null | undefined,
-): Promise<RefreshTokenResponse> => {
-  if (appConfig.dpopEnabled) {
-    if (!dpopJkt) {
-      throw createError(500, "Internal error: DPoP JKT not found on request.");
-    }
-  }
+export const refreshSession = async (staleRefreshToken: string | null | undefined) => {
+  if (!staleRefreshToken) throw createError(401, 'No refresh token provided');
+  const decoded = decodeRefreshJWT(staleRefreshToken);
+  if (!decoded) throw createError(401, 'Invalid or expired refresh token');
 
-  if (!refreshToken) throw createError(401, "No refresh token provided");
+  await queryInjectUserID(decoded.id);
+  const refreshedUser = await queryBumpTokenVersionCAS(decoded);
+  if (!refreshedUser) throw createError(401, 'New login required');
 
-  const decoded = decodeRefreshToken(
-    refreshToken ?? null,
-  ) as AccessTokenPayload | null;
-  if (!decoded) throw createError(401, "Invalid or expired refresh token");
-
-  if (appConfig.dpopEnabled) {
-    const tokenJkt = decoded.cnf?.jkt;
-    if (tokenJkt && tokenJkt !== dpopJkt) {
-      throw createError(401, "Proof-of-Possession failed (JKT mismatch).");
-    }
-  }
-
-  const [user = null] = await queryBumpTokenVersionAndGetSelfDataCAS(
-    decoded.id,
-    decoded.tokenVer,
-  );
-  if (!user) throw createError(401, "New login required");
-
-  const { token_version, user_data: userData } = user;
-
-  const cnfClaim = dpopJkt
-    ? {
-        cnf: {
-          jkt: dpopJkt
-            .replace(/\+/g, "-")
-            .replace(/\//g, "_")
-            .replace(/=+$/g, ""),
-        },
-      }
-    : {};
-
-  const newAccess = jwt.sign(
-    {
-      id: userData.id,
-      role: userData.role,
-      tokenVer: token_version,
-      ...cnfClaim,
-    },
-    authConfig.jwtAccessSecret,
-    { expiresIn: "5m" },
-  );
-
-  const newRefresh = jwt.sign(
-    {
-      id: userData.id,
-      role: userData.role,
-      tokenVer: token_version,
-      ...cnfClaim,
-    },
-    authConfig.jwtRefreshSecret,
-    { expiresIn: "14d" },
-  );
+  const { accessToken, refreshToken } = signTokens(refreshedUser, '5m', '15d');
 
   return {
-    message: "Access token refreshed",
-    accessToken: newAccess,
-    refreshToken: newRefresh,
-    userId: userData.id,
+    accessToken,
+    refreshToken,
   };
 };
+
+export const getCurrentUser = (userId: string) => queryGetUserById(userId);

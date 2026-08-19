@@ -41,9 +41,7 @@ export const validate =
     };
 
     if (data.body) req.body = data.body;
-    if (data.query) {
-      Object.assign(req.query, data.query);
-    }
+    if (data.query) Object.defineProperty(req, 'query', { value: data.query, writable: true, configurable: true });
     if (data.params) req.params = data.params;
     return next();
   };

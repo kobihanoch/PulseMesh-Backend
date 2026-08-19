@@ -1,0 +1,83 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1785954079922,
+      "tag": "0000_amusing_network",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785968940751,
+      "tag": "0001_setup_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785970994573,
+      "tag": "0002_add_user_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786006456287,
+      "tag": "0003_clean_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786007933419,
+      "tag": "0004_add_devices_and_registrants",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786044973317,
+      "tag": "0005_add_incidents",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786108763523,
+      "tag": "0006_incident_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786111398442,
+      "tag": "0007_candidate_response_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786114623064,
+      "tag": "0008_phone_locations_and_defibrillator_candidates",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786114720077,
+      "tag": "0009_fix_first_phone_location_policy",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786280400000,
+      "tag": "0010_allow_guest_registration_location",
+      "breakpoints": true
+    }
+  ]
+}

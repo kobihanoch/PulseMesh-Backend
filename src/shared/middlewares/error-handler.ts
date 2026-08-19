@@ -1,21 +1,12 @@
 import { ErrorRequestHandler, Response } from 'express';
-import { createLogger } from '../../infrastructure/logger.ts';
 
-const logger = createLogger('middleware:error-handler');
-
-export const errorHandler: ErrorRequestHandler = (
-  err,
-  req,
-  res,
-  next,
-): Response<{ success: boolean; message: string }> => {
+export const errorHandler: ErrorRequestHandler = (err, req, res, next): Response<{ success: boolean; message: string }> => {
   // Log to dev console error stack
   // Log to prod console error message
   const statusCode = err.statusCode || 500;
-  const requestLogger = req.logger || logger;
 
   // Log
-  requestLogger.error(
+  console.error(
     {
       err,
       event: 'request.failed',
