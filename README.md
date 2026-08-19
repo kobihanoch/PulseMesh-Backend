@@ -2,8 +2,7 @@
 
 The PulseMesh backend is the Express API for the mobile-defibrillator registry and emergency simulator. It manages registration, authentication, devices, telemetry, geographic incident matching, simulated Push/LoRa alerts, editable marketing content, and bicycle routing.
 
-- [Frontend documentation](../Frontend/README.md)
-- [Complete project documentation](../README.md)
+- [Frontend repo](https://github.com/kobihanoch/PulseMesh-Frontend)
 
 ## Responsibilities
 
