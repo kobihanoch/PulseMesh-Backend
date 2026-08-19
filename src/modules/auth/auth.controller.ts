@@ -4,6 +4,7 @@ import { authenticateUser, getCurrentUser, logoutFromAllDevices, refreshSession 
 import { decodeAccessJWT, decodeRefreshJWT, getAccessToken, getRefreshToken } from './auth.utils.ts';
 import { LoginRequest } from './types/auth.request.types.ts';
 import { LoginResponse } from './types/auth.response.types.ts';
+import { appConfig } from '../../config/app.config.ts';
 
 /**
  * Authenticate a user with credentials and issue fresh access and refresh tokens.
@@ -86,6 +87,7 @@ function storeTokensInHTTPOnlyCookie(res: Response, refreshToken: string, access
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
+    domain: appConfig.cookieDomain,
     maxAge: refreshExp! * 1000 - Date.now(),
     // Next's refresh Route Handler must receive this cookie too.
     path: '/',
@@ -95,6 +97,7 @@ function storeTokensInHTTPOnlyCookie(res: Response, refreshToken: string, access
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
+    domain: appConfig.cookieDomain,
     maxAge: accessExp! * 1000 - Date.now(),
     path: '/',
   });
@@ -105,6 +108,7 @@ function clearTokensInHTTPOnlyCookie(res: Response) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
+    domain: appConfig.cookieDomain,
     path: '/',
   });
 
@@ -112,6 +116,7 @@ function clearTokensInHTTPOnlyCookie(res: Response) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
+    domain: appConfig.cookieDomain,
     path: '/',
   });
 }
