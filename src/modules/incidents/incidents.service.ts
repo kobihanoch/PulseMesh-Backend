@@ -12,6 +12,7 @@ import {
 import type { CreateIncidentRequest, ListIncidentsRequest } from './types/incidents.request.types.ts';
 import { distanceInMeters } from './incidents.utils.ts';
 import { simulateIncidentNotifications } from '../notifications/notifications.service.ts';
+import { cacheIncidentCount, clearIncidentCount, getCachedIncidentCount } from './incidents.cache.ts';
 
 const MAX_CANDIDATES = 10;
 
@@ -28,12 +29,16 @@ export async function createNewIncident(input: CreateIncidentRequest) {
 
   const candidates = await querySaveCandidates(incident.id, devices);
   await simulateIncidentNotifications(incident.id, candidates);
+  await clearIncidentCount();
   return { ...incident, candidates };
 }
 
 export async function getIncidentsPage(query: ListIncidentsRequest) {
   const offset = (query.page - 1) * query.limit;
-  const [items, totalItems] = await Promise.all([queryListIncidents(query.limit, offset), queryCountIncidents()]);
+  const cachedCount = await getCachedIncidentCount();
+  const [items, count] = await Promise.all([queryListIncidents(query.limit, offset), cachedCount === null ? queryCountIncidents() : null]);
+  const totalItems = cachedCount ?? count!;
+  if (cachedCount === null) await cacheIncidentCount(totalItems);
   return {
     items,
     pagination: {

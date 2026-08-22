@@ -12,6 +12,7 @@ import notificationRoutes from './modules/notifications/notifications.routes.ts'
 import { errorHandler } from './shared/middlewares/error-handler.ts';
 import { generalLimiter } from './shared/middlewares/rate-limiter.ts';
 import cookieParser from 'cookie-parser';
+import { appConfig } from './config/app.config.ts';
 
 export const createApp = () => {
   const app = express();
@@ -21,7 +22,7 @@ export const createApp = () => {
 
   app.use(
     cors({
-      origin: 'https://pulsemesh.kobihanoch.com',
+      origin: appConfig.clientUrl,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'x-app-version', 'x-client-id'],
       exposedHeaders: ['x-min-version'],

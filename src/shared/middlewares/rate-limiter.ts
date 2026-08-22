@@ -2,8 +2,17 @@ import { NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import createError from 'http-errors';
 import { appConfig } from '../../config/app.config.ts';
+import { RedisStore } from 'rate-limit-redis';
+import { cacheClient } from '../../infrastructure/cache/redis.config.ts';
 
 const isTestEnv = appConfig.isTest;
+const rateLimitStore = (prefix: string) =>
+  appConfig.cacheEnabled
+    ? new RedisStore({
+        sendCommand: (...args: string[]) => cacheClient.sendCommand(args) as Promise<any>,
+        prefix: `rate-limit:${prefix}:`,
+      })
+    : undefined;
 
 const bypassInTest = (middleware: (req: Request, res: Response, next: NextFunction) => void) => {
   if (isTestEnv) {
@@ -19,6 +28,7 @@ export const generalLimiter = bypassInTest(
   rateLimit({
     windowMs: 60 * 1000, // 1 minute
     max: 50,
+    store: rateLimitStore('general'),
     standardHeaders: true,
     validate: false,
     legacyHeaders: false,
@@ -34,6 +44,7 @@ export const loginLimiter = bypassInTest(
   rateLimit({
     windowMs: 60 * 1000 * 15,
     max: 5,
+    store: rateLimitStore('login'),
     standardHeaders: true,
     legacyHeaders: false,
     validate: false,
@@ -50,6 +61,7 @@ export const loginIpLimiter = bypassInTest(
   rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 30,
+    store: rateLimitStore('login-ip'),
     standardHeaders: true,
     legacyHeaders: false,
     validate: false,

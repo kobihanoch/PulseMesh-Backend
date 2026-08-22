@@ -20,6 +20,12 @@ import type {
   UpdateRegistrationRequest,
 } from './types/registrations.request.types.ts';
 import type { RegistrationQueryResult } from './types/registrations.types.ts';
+import {
+  cacheRegistrationCount,
+  clearRegistrationCount,
+  getCachedRegistrationCount,
+} from './registrations.cache.ts';
+import { clearDeviceCount } from '../devices/devices.cache.ts';
 
 export async function createPublicRegistration(input: CreateRegistrationRequest): Promise<RegistrationQueryResult> {
   const registrantId = randomUUID();
@@ -74,7 +80,10 @@ export async function createPublicRegistration(input: CreateRegistrationRequest)
     loraDevices.push(loraDevice);
   }
 
-  return { ...registrant, defibrillators, loraDevices };
+  const registration = { ...registrant, defibrillators, loraDevices };
+  await clearRegistrationCount();
+  await clearDeviceCount();
+  return registration;
 }
 
 export async function updateRegistrantLocation(registrantId: string, location: UpdateRegistrantLocationRequest['body']) {
@@ -85,7 +94,13 @@ export async function updateRegistrantLocation(registrantId: string, location: U
 
 export async function getRegistrationsPage(query: ListRegistrationsRequest) {
   const offset = (query.page - 1) * query.limit;
-  const [registrants, count] = await Promise.all([queryListRegistrants(query.limit, offset, query.search), queryCountRegistrants(query.search)]);
+  const cachedCount = query.search ? null : await getCachedRegistrationCount();
+  const [registrants, count] = await Promise.all([
+    queryListRegistrants(query.limit, offset, query.search),
+    cachedCount === null ? queryCountRegistrants(query.search) : null,
+  ]);
+  const totalItems = cachedCount ?? count!.totalItems;
+  if (!query.search && cachedCount === null) await cacheRegistrationCount(totalItems);
   const items = await attachEquipment(registrants);
 
   return {
@@ -93,8 +108,8 @@ export async function getRegistrationsPage(query: ListRegistrationsRequest) {
     pagination: {
       page: query.page,
       limit: query.limit,
-      totalItems: count.totalItems,
-      totalPages: Math.ceil(count.totalItems / query.limit),
+      totalItems,
+      totalPages: Math.ceil(totalItems / query.limit),
     },
   };
 }
@@ -119,6 +134,8 @@ export async function updateRegistrationById(registrantId: string, changes: Upda
 export async function deleteRegistrationById(registrantId: string) {
   const deleted = await queryDeleteRegistrant(registrantId);
   if (!deleted) throw createError(404, 'Registration not found');
+  await clearRegistrationCount();
+  await clearDeviceCount();
 }
 
 async function attachEquipment(registrants: RegistrationQueryResult[] | Omit<RegistrationQueryResult, 'defibrillators' | 'loraDevices'>[]) {
